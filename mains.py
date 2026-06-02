@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Depends
 import os
 from dotenv import load_dotenv
 from groq import Groq
@@ -8,10 +8,13 @@ from models import Projects,Base
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 import json
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 Base.metadata.create_all(bind=engine)
+
+
 
 Schema ={
             "type": "object",
@@ -40,7 +43,12 @@ Schema ={
             "additionalProperties": False
         }
 
-db = SessionLocal()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 def create_item(db: Session, name: str, description: str):
     db_item = Projects(name=name, description=description)
@@ -63,12 +71,21 @@ client = Groq(
 
 dapp = FastAPI()
 
+dapp.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @dapp.get("/")
 def heathy_check():
     return {"status":"the service is running"}
 
 @dapp.post("/ai-analysis")
-def ai_response(message:Message):
+def ai_response(message:Message,db: Session = Depends(get_db)):
     stmt = select(Projects)
     all_projects = db.scalars(stmt).all()
     data = {}
@@ -100,7 +117,7 @@ def ai_response(message:Message):
 
 #manage task routes
 @dapp.post("/add-project")
-def add_project(project:Project):
+def add_project(project:Project,db: Session = Depends(get_db)):
     
     data = Projects(name=project.title,description=project.description)
     db.add(data)
@@ -108,8 +125,8 @@ def add_project(project:Project):
     db.refresh(data)
     return {"message":f"data added successfully {data}"}
 
-@dapp.get("/get-all-projects")
-def get_all_projects():
+@dapp.get("/get-all-projects",)
+def get_all_projects(db: Session = Depends(get_db)):
     
     stmt = select(Projects)
     
@@ -118,7 +135,7 @@ def get_all_projects():
     return {"projects":result}
 
 @dapp.get("/get-project/{project_id}")
-def get_project(project_id:int):
+def get_project(project_id:int,db: Session = Depends(get_db)):
     
     stmt = select(Projects).where(Projects.id == project_id)
     
@@ -128,7 +145,7 @@ def get_project(project_id:int):
     return output
 
 @dapp.put("/edit-project/{project_id}")
-def edit_project(project_id:int,project:Project):
+def edit_project(project_id:int,project:Project,db: Session = Depends(get_db)):
     
     stmt = select(Projects).where(Projects.id == project_id)
     result = db.execute(stmt).scalars().one()
@@ -144,7 +161,7 @@ def edit_project(project_id:int,project:Project):
     return {"message":"data updated successfully"}
 
 @dapp.delete("/delete-project/{project-id}")
-def delete_project(project_id):
+def delete_project(project_id:int,db: Session = Depends(get_db)):
     
     result = db.get(Projects,project_id)
     db.delete(result)
