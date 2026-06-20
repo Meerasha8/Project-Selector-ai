@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Depends
+from fastapi import FastAPI,Depends,HTTPException
 import os
 from dotenv import load_dotenv
 from groq import Groq
@@ -60,6 +60,10 @@ def create_item(db: Session, name: str, description: str):
     return db_item
 
 class Project(BaseModel):
+    title : str
+    description : str
+    
+class Skill(BaseModel):
     title : str
     description : str
 
@@ -131,6 +135,14 @@ def add_project(project:Project,db: Session = Depends(get_db)):
     db.refresh(data)
     return {"message":f"data added successfully {data}"}
 
+@dapp.post("/add-skill")
+def add_skill(skill:Skill,db: Session = Depends(get_db)):
+    data = Skills(name=skill.title,description=skill.description)
+    db.add(data)
+    db.commit()
+    db.refresh(data)
+    return {"message":"data added successfully","Added Skill":data.name}
+
 @dapp.get("/get-all-projects",)
 def get_all_projects(db: Session = Depends(get_db)):
     
@@ -139,6 +151,12 @@ def get_all_projects(db: Session = Depends(get_db)):
     result = db.execute(stmt).scalars().all()
     
     return {"projects":result}
+
+@dapp.get("/get-all-skills")
+def get_all_skills(db: Session = Depends(get_db)):
+    stmt = select(Skills)
+    result=db.execute(stmt).scalars().all()
+    return {"skills":result}
 
 @dapp.get("/get-project/{project_id}")
 def get_project(project_id:int,db: Session = Depends(get_db)):
@@ -173,7 +191,7 @@ def delete_project(project_id:int,db: Session = Depends(get_db)):
     db.delete(result)
     db.commit()
     
-    return {"message":"project was deleted successfully"}
+    return {"message":"project was deleted successfully","Deleted project":result.name}
 
 @dapp.get("/skills")
 def get_skills(db: Session = Depends(get_db)):
@@ -193,6 +211,14 @@ def add_skills(skill:Skill,db: Session = Depends(get_db)):
     
     
     
+@dapp.delete("/delete-skill/{skill_id}")
+def delete_skill(skill_id:int,db: Session = Depends(get_db)):
+    result = db.get(Skills,skill_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Skill not found")
+    db.delete(result)
+    db.commit()
+    return {"message":"skill was deleted successfully","Deleted skill": result.name}    
     
     
 
