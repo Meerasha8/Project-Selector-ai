@@ -71,8 +71,8 @@ class Message(BaseModel):
     message : str
 
 class Skill(BaseModel):
-    skill_name: str
-    experience: str
+    name: str
+    description: str
     
 client = Groq(
     # This is the default and can be omitted
@@ -203,11 +203,11 @@ def get_skills(db: Session = Depends(get_db)):
 
 @dapp.post("/add-skills")
 def add_skills(skill:Skill,db: Session = Depends(get_db)):
-    data = Skills(skill_name=skill.skill_name,how_much_known=skill.experience)
+    data = Skills(name=skill.name,description=skill.description)
     db.add(data)
     db.commit()
     db.refresh(data)
-    return {"message":f"data added successfully {skill.skill_name,skill.experience}"}
+    return {"message":f"data added successfully {skill.name,skill.description}"}
     
     
     
@@ -219,6 +219,22 @@ def delete_skill(skill_id:int,db: Session = Depends(get_db)):
     db.delete(result)
     db.commit()
     return {"message":"skill was deleted successfully","Deleted skill": result.name}    
+
+@dapp.put("/edit-skill/{project_id}")
+def edit_skill(skill:Skill,skill_id:int,db: Session = Depends(get_db)):
+    
+    stmt = select(Skills).where(Skills.id == skill_id)
+    result = db.execute(stmt).scalars().one()
+    
+    if skill.name != "":
+        result.name = skill.name
+    if skill.description != "":
+        result.description = skill.description
+    
+    db.commit()
+    return {"message":"skill was edited successfully"}
+    
+    
     
     
 
