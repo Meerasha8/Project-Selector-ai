@@ -27,10 +27,10 @@ def get_all_achievement(db: Session = Depends(get_db),current_user: User = Depen
 @router.get("/get-achievement/{achievement_id}")
 def get_achievement(achievement_id:int,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
     achievement=db.get(Achievements,achievement_id)
-    if achievement.user_uuid != current_user.user_uuid:
-        raise HTTPException(status_code=403,detail="You do not have permission to view this achievement")
     if not achievement:
         raise HTTPException(status_code=404,detail="achievement not found for the given id")
+    if achievement.user_uuid != current_user.user_uuid:
+        raise HTTPException(status_code=403,detail="You do not have permission to view this achievement")
     return achievement
 
 # to add a achievement
