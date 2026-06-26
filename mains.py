@@ -4,12 +4,12 @@ from dotenv import load_dotenv
 from groq import Groq
 from pydantic import BaseModel
 from database import SessionLocal,engine
-from models import Projects,Base,Skills
+from models import Projects,Base,Skills,UserDetails
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 import json
 from fastapi.middleware.cors import CORSMiddleware
-from routes import projects,skills,internship,certificates,achievements,education,ai_chat
+from routes import projects,skills,internship,certificates,achievements,education,ai_chat,user_details,achievements
 from auth import routes
 
 load_dotenv()
@@ -86,7 +86,8 @@ dapp.include_router(achievements.router)
 dapp.include_router(education.router)
 dapp.include_router(routes.router)
 dapp.include_router(ai_chat.router)
-
+dapp.include_router(user_details.router)
+dapp.include_router(achievements.router)
 @dapp.get("/")
 def heathy_check():
     return {"status":"the service is running"}

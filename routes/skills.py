@@ -39,7 +39,7 @@ def add_skill(skill:Skill,db: Session = Depends(get_db),current_user: User = Dep
     db.add(skill)
     db.commit()
     db.refresh(skill)
-    return {"Skill added successfully":skill}
+    return {"message":f"Skill added successfully{skill}"}
 
 #to edit things in the skill
 @router.put("/edit-skill/{skill_id}")
@@ -53,7 +53,7 @@ def edit_skill(skill_data:Skill,skill_id:int,db: Session = Depends(get_db),curre
     skill.description=skill_data.description
     db.commit()
     db.refresh(skill)
-    return {"Skill updated":skill}
+    return {"message":f"Skill updated{skill}"}
 
 #to delete a skill in the db
 @router.delete("/delete-skill/{skill_id}")
@@ -65,5 +65,5 @@ def delete_skill(skill_id:int,db: Session = Depends(get_db),current_user: User =
         raise HTTPException(status_code=403,detail="You are not allowed to delete this skill")
     db.delete(skill)
     db.commit()
-    return {"Skill deleted":skill}
+    return {"message":f"Skill deleted{skill}"}
 
