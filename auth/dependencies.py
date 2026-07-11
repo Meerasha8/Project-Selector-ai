@@ -1,38 +1,49 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from sqlalchemy.orm import Session
-from dependencies import get_db
-from models import User
+import httpx
 import os
-from dotenv import load_dotenv
+from models import User
 
-load_dotenv()
+SUPABASE_JWKS_URL = os.getenv("SUPABASE_JWKS_URL")
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/auth/login"
-)
+_jwks_cache = None
+
+async def get_jwks():
+    global _jwks_cache
+    if _jwks_cache is None:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(SUPABASE_JWKS_URL)
+            resp.raise_for_status()
+            _jwks_cache = resp.json()
+    return _jwks_cache
 
 
-def decode_token(token: str):
+async def decode_token(token: str):
     try:
-        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        jwks = await get_jwks()
+        unverified_header = jwt.get_unverified_header(token)
+        key = next((k for k in jwks["keys"] if k["kid"] == unverified_header["kid"]), None)
+        if key is None:
+            raise HTTPException(status_code=401, detail="Invalid token key")
+
+        payload = jwt.decode(
+            token,
+            key,
+            algorithms=["ES256"],   # use ["HS256"] + SUPABASE_JWT_SECRET if your project is still on legacy
+            audience="authenticated",
+        )
         return payload
-
     except JWTError:
-        raise HTTPException(status_code=401,detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(get_db)):
-    payload = decode_token(token)
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    payload = await decode_token(token)
     user_uuid = payload.get("sub")
     if not user_uuid:
-        raise HTTPException(status_code=401,detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
-    user = (db.query(User).filter(User.user_uuid == user_uuid).first())
-    if not user:
-        raise HTTPException(status_code=401,detail="User not found")
-    return user
+    return User(user_uuid=user_uuid, email=payload.get("email"))

@@ -1,66 +1,105 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from models import Certificates,User
-from dependencies import get_db
-from pydantic import BaseModel 
+from pydantic import BaseModel
+from supabase import Client
+
 from auth.dependencies import get_current_user
+from dependencies import get_supabase_user_client
+from models import User
+
 
 class Certificate(BaseModel):
     certificate_issuer: str
     certificate_name: str
-    
-router=APIRouter(
-    prefix="/certificates",
-    tags=["Certificates"]
-)
+
+
+router = APIRouter(prefix="/certificates", tags=["Certificates"])
+
 
 @router.get("/")
-def get_all_certificates(db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
-    query = select(Certificates.where(Certificates.user_uuid == current_user.user_uuid))
-    certificates = db.scalars(query).all()
-    return {"certificates": certificates}
+def get_all_certificates(
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    result = supabase.table("certificates").select("*").eq("user_uuid", current_user.user_uuid).execute()
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"certificates": result.data or []}
+
 
 @router.get("/get-certificate/{certificate_id}")
-def get_certificate(certificate_id:int,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
-    certificate=db.get(Certificates,certificate_id)
-    if not certificate:
-        raise HTTPException(status_code=404,detail="Certificate not found for the given id")
-    if certificate.user_uuid != current_user.user_uuid:
-        raise HTTPException(status_code=403,detail="You do not have permission to view this certificate")
-    return certificate
+def get_certificate(
+    certificate_id: int,
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    result = (
+        supabase.table("certificates")
+        .select("*")
+        .eq("id", certificate_id)
+        .eq("user_uuid", current_user.user_uuid)
+        .maybe_single()
+        .execute()
+    )
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Certificate not found for the given id")
+    return result.data
+
 
 @router.post("/add-certificate")
-def add_certificate(certificate:Certificate,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
-    certificate=Certificates(certificate_issuer=certificate.certificate_issuer,certificate_name=certificate.certificate_name,user_uuid=current_user.user_uuid)
-    db.add(certificate)
-    db.commit()
-    db.refresh(certificate)
-    return {"Certificate added successfully": certificate}
+def add_certificate(
+    certificate: Certificate,
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    payload = {
+        "certificate_issuer": certificate.certificate_issuer,
+        "certificate_name": certificate.certificate_name,
+        "user_uuid": current_user.user_uuid,
+    }
+    result = supabase.table("certificates").insert(payload).execute()
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"Certificate added successfully": result.data}
 
 
 @router.put("/edit-certificate/{certificate_id}")
-def edit_certificate(certificate:Certificate,certificate_id:int,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):        
-    curr_certificate=db.get(Certificates,certificate_id)
-    if not certificate:
-        raise HTTPException(status_code=404,detail="Certificate not found for the given id")
-    if curr_certificate.user_uuid != current_user.user_uuid:
-        raise HTTPException(status_code=403,detail="You do not have permission to edit this certificate")
-    curr_certificate.certificate_issuer=certificate.certificate_issuer
-    curr_certificate.certificate_name=certificate.certificate_name
-    db.commit()
-    db.refresh(curr_certificate)
-    return {"Certificate updated": curr_certificate}
+def edit_certificate(
+    certificate: Certificate,
+    certificate_id: int,
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    payload = {
+        "certificate_issuer": certificate.certificate_issuer,
+        "certificate_name": certificate.certificate_name,
+    }
+    result = (
+        supabase.table("certificates")
+        .update(payload)
+        .eq("id", certificate_id)
+        .eq("user_uuid", current_user.user_uuid)
+        .execute()
+    )
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"Certificate updated": result.data}
 
 
-@router.delete("/delete-certificate/{certificate_id}")    
-def delete_certificate(certificate_id:int,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
-    certificate=db.get(Certificates,certificate_id)
-    if not certificate:
-        raise HTTPException(status_code=404,detail="Certificate not found for the given id")
-    if certificate.user_uuid != current_user.user_uuid:
-        raise HTTPException(status_code=403,detail="You do not have permission to delete this certificate")
-    
-    db.delete(certificate)
-    db.commit()
-    return {"Certificate deleted": certificate}
+@router.delete("/delete-certificate/{certificate_id}")
+def delete_certificate(
+    certificate_id: int,
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    result = (
+        supabase.table("certificates")
+        .delete()
+        .eq("id", certificate_id)
+        .eq("user_uuid", current_user.user_uuid)
+        .execute()
+    )
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"Certificate deleted": result.data}

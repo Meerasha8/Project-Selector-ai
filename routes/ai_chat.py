@@ -24,30 +24,11 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY"),
 )
 
-@router.get("/skills")
-def skills_chat():
+@router.get("/chat")
+def chat():
     pass
 
-@router.get("/certificates")
-def certificates_chat():
+@router.get("/create-resume")
+def create_resume():
     pass
 
-@router.get("/projects")
-def projects_chat():
-    pass
-
-@router.get("/achievements")
-def achievements_chat():
-    pass
-
-@router.get("/internships")
-def internship_chat():
-    pass
-
-@router.get("/overall-chat")
-def overall_chat():
-    pass
-
-@router.get("/resume-maker")
-def resume_creator():
-    pass

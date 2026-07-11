@@ -14,7 +14,8 @@ from auth import routes
 
 load_dotenv()
 
-Base.metadata.create_all(bind=engine)
+if engine.url.get_backend_name() == "sqlite":
+    Base.metadata.create_all(bind=engine)
 
 
 
