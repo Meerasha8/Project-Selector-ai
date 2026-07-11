@@ -26,9 +26,9 @@ class UserDetails(Base):
     mobile_number = Column(String(20), index=True)
     email_id = Column(String(40), index=True)
     github_url = Column(String(40), index=True)
-    Linkedin_url = Column(String(40), index=True)
+    linkedin_url = Column(String(40), index=True)
     portfolio_link = Column(String(40), index=True)
-    Location = Column(String(40), index=True)
+    location = Column(String(40), index=True)
     profession_summary = Column(String(255), index=True)
     user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
 
