@@ -1,64 +1,87 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import HttpUrl,EmailStr
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from models import UserDetails
-from dependencies import get_db
+from pydantic import BaseModel
+from supabase import Client
+
 from auth.dependencies import get_current_user
-from pydantic import BaseModel 
+from dependencies import get_supabase_user_client
+from models import User
 
-class UserDetail(BaseModel):
-    name:str
-    mobile_number:str
-    email_id:EmailStr
-    github_url:HttpUrl
-    linkedin_url:HttpUrl
-    portfolio_link:HttpUrl
-    location:str
-    profession_summary:str
-    
-    
 
-router = APIRouter(
-    prefix="/user-details",
-    tags=["User Details"]
-)
+class UserDetailsPayload(BaseModel):
+    name: str | None = None
+    mobile_number: str | None = None
+    email_id: str | None = None
+    github_url: str | None = None
+    linkedin_url: str | None = None
+    portfolio_link: str | None = None
+    location: str | None = None
+    profession_summary: str | None = None
 
-# to get user details
+
+router = APIRouter(prefix="/user-details", tags=["User Details"])
+
+
 @router.get("/")
-def get_details(db: Session = Depends(get_db)):
-    details = db.execute(select(UserDetails)).scalars().all()
-    return details
+def get_user_details(
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    result = (
+        supabase.table("user_details")
+        .select("*")
+        .eq("user_uuid", current_user.user_uuid)
+        .maybe_single()
+        .execute()
+    )
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return result.data or {}
 
 
-# to add completely a new user_details
-@router.post("/add-details/")
-def add_user_details(details:UserDetail,current_user=Depends(get_current_user),db: Session = Depends(get_db)):
-    new_details=UserDetails(name=details.name,mobile_number=details.mobile_number,email_id=details.email_id,github_url=details.github_url,linkedin_url=details.linkedin_url,portfolio_link=details.portfolio_link,location=details.location,profession_summary=details.profession_summary,user_uuid=current_user.user_uuid)
-    db.add(new_details)
-    db.commit()
-    db.refresh(new_details)
-    return {"message":"User details added successfully"}
+@router.post("/upsert")
+def upsert_user_details(
+    payload: UserDetailsPayload,
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    data = {key: value for key, value in payload.dict().items() if value is not None}
+    data["user_uuid"] = current_user.user_uuid
 
-#to edit things in the skill
-@router.put("/edit-details/{user_id}")
-def edit_details(user_id:int,user_details:UserDetail,current_user=Depends(get_current_user),db: Session = Depends(get_db)):
-    details=db.get(UserDetails,user_id)
-    if not details:
-        raise HTTPException(status_code=404,detail="User details not found for the given id")
-    if details.user_uuid != current_user.user_uuid:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    details.name=user_details.name
-    details.mobile_number=user_details.mobile_number
-    details.email_id=user_details.email_id
-    details.github_url=user_details.github_url
-    details.linkedin_url=user_details.linkedin_url
-    details.portfolio_link=user_details.portfolio_link
-    details.location=user_details.location
-    details.profession_summary=user_details.profession_summary
-    db.commit()
-    db.refresh(details)
-    return {"message":"Details updated successfully"}
+    result = supabase.table("user_details").upsert(data, on_conflict="user_uuid").execute()
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"message": "user details saved successfully", "data": result.data}
 
-#delete route is unnecessary
 
+@router.put("/")
+def update_user_details(
+    payload: UserDetailsPayload,
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    data = {key: value for key, value in payload.dict().items() if value is not None}
+    result = (
+        supabase.table("user_details")
+        .update(data)
+        .eq("user_uuid", current_user.user_uuid)
+        .execute()
+    )
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"message": "user details updated successfully", "data": result.data}
+
+
+@router.delete("/")
+def delete_user_details(
+    supabase: Client = Depends(get_supabase_user_client),
+    current_user: User = Depends(get_current_user),
+):
+    result = (
+        supabase.table("user_details")
+        .delete()
+        .eq("user_uuid", current_user.user_uuid)
+        .execute()
+    )
+    if getattr(result, "error", None):
+        raise HTTPException(status_code=400, detail=str(result.error))
+    return {"message": "user details deleted successfully"}
