@@ -1,5 +1,7 @@
 -- Supabase schema for Project Knowledge
 -- Paste this into the Supabase SQL editor and run it.
+-- Fixed: CREATE POLICY does not support IF NOT EXISTS in Postgres,
+-- so each policy is now DROP-then-CREATE to stay idempotent/rerunnable.
 
 create extension if not exists vector;
 create extension if not exists pgcrypto;
@@ -15,13 +17,16 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
-create policy if not exists "Users can view own profile" on public.profiles
+drop policy if exists "Users can view own profile" on public.profiles;
+create policy "Users can view own profile" on public.profiles
     for select using (auth.uid() = id);
 
-create policy if not exists "Users can update own profile" on public.profiles
+drop policy if exists "Users can update own profile" on public.profiles;
+create policy "Users can update own profile" on public.profiles
     for update using (auth.uid() = id);
 
-create policy if not exists "Users can insert own profile" on public.profiles
+drop policy if exists "Users can insert own profile" on public.profiles;
+create policy "Users can insert own profile" on public.profiles
     for insert with check (auth.uid() = id);
 
 -- User details
@@ -40,9 +45,12 @@ create table if not exists public.user_details (
     updated_at timestamptz default now()
 );
 
+create unique index if not exists idx_user_details_user_uuid_unique on public.user_details(user_uuid);
+
 alter table public.user_details enable row level security;
 
-create policy if not exists "Users can manage own user details" on public.user_details
+drop policy if exists "Users can manage own user details" on public.user_details;
+create policy "Users can manage own user details" on public.user_details
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Education
@@ -61,7 +69,8 @@ create table if not exists public.education (
 
 alter table public.education enable row level security;
 
-create policy if not exists "Users can manage own education" on public.education
+drop policy if exists "Users can manage own education" on public.education;
+create policy "Users can manage own education" on public.education
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Certificates
@@ -76,7 +85,8 @@ create table if not exists public.certificates (
 
 alter table public.certificates enable row level security;
 
-create policy if not exists "Users can manage own certificates" on public.certificates
+drop policy if exists "Users can manage own certificates" on public.certificates;
+create policy "Users can manage own certificates" on public.certificates
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Internship
@@ -85,7 +95,7 @@ create table if not exists public.internship (
     company_name text not null,
     role text,
     description text,
-    duration text,
+    "Duration" text,
     user_uuid uuid not null references auth.users(id) on delete cascade,
     created_at timestamptz default now(),
     updated_at timestamptz default now()
@@ -93,7 +103,8 @@ create table if not exists public.internship (
 
 alter table public.internship enable row level security;
 
-create policy if not exists "Users can manage own internship" on public.internship
+drop policy if exists "Users can manage own internship" on public.internship;
+create policy "Users can manage own internship" on public.internship
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Achievements
@@ -107,7 +118,8 @@ create table if not exists public.achievements (
 
 alter table public.achievements enable row level security;
 
-create policy if not exists "Users can manage own achievements" on public.achievements
+drop policy if exists "Users can manage own achievements" on public.achievements;
+create policy "Users can manage own achievements" on public.achievements
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Projects
@@ -125,7 +137,8 @@ create table if not exists public.projects (
 
 alter table public.projects enable row level security;
 
-create policy if not exists "Users can manage own projects" on public.projects
+drop policy if exists "Users can manage own projects" on public.projects;
+create policy "Users can manage own projects" on public.projects
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Skills
@@ -140,7 +153,8 @@ create table if not exists public.skills (
 
 alter table public.skills enable row level security;
 
-create policy if not exists "Users can manage own skills" on public.skills
+drop policy if exists "Users can manage own skills" on public.skills;
+create policy "Users can manage own skills" on public.skills
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Document embeddings
@@ -156,7 +170,8 @@ create table if not exists public.document_embeddings (
 
 alter table public.document_embeddings enable row level security;
 
-create policy if not exists "Users can manage own embeddings" on public.document_embeddings
+drop policy if exists "Users can manage own embeddings" on public.document_embeddings;
+create policy "Users can manage own embeddings" on public.document_embeddings
     for all using (auth.uid() = user_uuid) with check (auth.uid() = user_uuid);
 
 -- Helpful indexes
