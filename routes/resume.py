@@ -1,6 +1,7 @@
 import os
 import tempfile
 import uuid
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,9 +17,11 @@ from models import (
     Educations,
     Internship,
     Projects,
+    ResumeHistory,
     Skills,
     User,
     UserDetails,
+    _uuid_value,
 )
 from resume_service import ResumeContent, ResumeService
 
@@ -42,7 +45,29 @@ class ResumeGenerationStatusResponse(BaseModel):
     error: str | None = None
 
 
-_jobs: dict[str, dict[str, Any]] = {}
+class ResumeHistoryItem(BaseModel):
+    id: int
+    job_id: str
+    status: str
+    job_description: str
+    created_at: datetime | None = None
+    download_url: str | None = None
+
+
+class ResumeHistoryListResponse(BaseModel):
+    items: list[ResumeHistoryItem]
+    limit: int
+    offset: int
+
+
+def _resume_storage_dir() -> str:
+    storage_dir = os.path.join(os.getcwd(), "generated_resumes")
+    os.makedirs(storage_dir, exist_ok=True)
+    return storage_dir
+
+
+def _resume_file_path(job_id: str | uuid.UUID) -> str:
+    return os.path.join(_resume_storage_dir(), f"{job_id}.docx")
 
 
 def _collect_user_resume_data(db: Session, user_uuid: str) -> dict[str, Any]:
@@ -109,53 +134,125 @@ def generate_resume_job(
     current_user: User = Depends(get_current_user),
 ):
     user_uuid = current_user.user_uuid
-    job_id = str(uuid.uuid4())
-    _jobs[job_id] = {
-        "status": "queued",
-        "user_uuid": user_uuid,
-        "job_description": payload.job_description,
-        "db": db,
-    }
+    job_id = uuid.uuid4()
+
+    job_record = ResumeHistory(
+        job_id=_uuid_value(job_id),
+        user_uuid=_uuid_value(user_uuid),
+        job_description=payload.job_description,
+        status="queued",
+    )
+    db.add(job_record)
+    db.commit()
+    db.refresh(job_record)
 
     try:
         user_data = _collect_user_resume_data(db, user_uuid)
         service = ResumeService()
         content = service.select_resume_content(payload.job_description, user_data)
         doc_bytes = service.render_docx(content, user_data.get("user_details"))
-        with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as tmp_file:
+        file_path = _resume_file_path(job_id)
+        with open(file_path, "wb") as tmp_file:
             tmp_file.write(doc_bytes)
-            file_path = tmp_file.name
-        _jobs[job_id]["status"] = "completed"
-        _jobs[job_id]["file_path"] = file_path
-        _jobs[job_id]["download_url"] = f"/resume/generate/{job_id}/download"
+        job_record.status = "completed"
+        job_record.download_url = f"/resume/generate/{job_id}/download"
+        job_record.error = None
     except Exception as exc:
-        _jobs[job_id]["status"] = "failed"
-        _jobs[job_id]["error"] = str(exc)
+        job_record.status = "failed"
+        job_record.error = str(exc)
+        job_record.download_url = None
 
-    return ResumeJobResponse(job_id=job_id, status=_jobs[job_id]["status"], message="Resume generation completed" if _jobs[job_id]["status"] == "completed" else "Resume generation failed")
+    db.commit()
+    db.refresh(job_record)
+
+    return ResumeJobResponse(
+        job_id=str(job_id),
+        status=job_record.status,
+        message="Resume generation completed" if job_record.status == "completed" else "Resume generation failed",
+    )
 
 
 @router.get("/generate/{job_id}", response_model=ResumeGenerationStatusResponse)
-def resume_job_status(job_id: str):
-    job = _jobs.get(job_id)
+def resume_job_status(
+    job_id: str,
+    db: Session = Depends(get_db),
+):
+    job = db.query(ResumeHistory).filter(ResumeHistory.job_id == _uuid_value(job_id)).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return ResumeGenerationStatusResponse(
-        job_id=job_id,
-        status=job["status"],
-        download_url=job.get("download_url"),
-        error=job.get("error"),
+        job_id=str(job.job_id),
+        status=job.status,
+        download_url=job.download_url if job.status == "completed" else None,
+        error=job.error,
     )
 
 
 @router.post("/generate/{job_id}/download")
-def resume_job_download(job_id: str):
-    job = _jobs.get(job_id)
+def resume_job_download(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    job = (
+        db.query(ResumeHistory)
+        .filter(ResumeHistory.job_id == _uuid_value(job_id))
+        .filter(ResumeHistory.user_uuid == _uuid_value(current_user.user_uuid))
+        .first()
+    )
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    if job["status"] != "completed" or not job.get("file_path"):
+    if job.status != "completed":
         raise HTTPException(status_code=409, detail="Resume generation is not complete yet")
 
-    response = FileResponse(job["file_path"], media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    file_path = _resume_file_path(job.job_id)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Generated resume file not found")
+
+    response = FileResponse(file_path, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
     response.headers["Content-Disposition"] = f"attachment; filename=resume-{job_id}.docx"
     return response
+
+
+@router.get(
+    "/history",
+    response_model=ResumeHistoryListResponse,
+    summary="List the authenticated user's resume generation history",
+    description="Return a paginated list of resume generation jobs for the authenticated user.",
+)
+def resume_history(
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_uuid = _uuid_value(current_user.user_uuid)
+    limit = max(1, min(limit, 100))
+    offset = max(0, offset)
+
+    rows = (
+        db.query(ResumeHistory)
+        .filter(ResumeHistory.user_uuid == user_uuid)
+        .order_by(ResumeHistory.created_at.desc(), ResumeHistory.id.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    items = []
+    for row in rows:
+        description = row.job_description
+        if len(description) > 100:
+            description = description[:97] + "..."
+        items.append(
+            ResumeHistoryItem(
+                id=row.id,
+                job_id=str(row.job_id),
+                status=row.status,
+                job_description=description,
+                created_at=row.created_at,
+                download_url=row.download_url if row.status == "completed" else None,
+            )
+        )
+
+    return ResumeHistoryListResponse(items=items, limit=limit, offset=offset)

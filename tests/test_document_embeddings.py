@@ -9,22 +9,47 @@ os.environ.setdefault("SUPABASE_DB_URL", "sqlite:///./test.db")
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from auth.dependencies import get_current_user
 from database import Base
 from dependencies import get_db
 from mains import dapp
-from models import DocumentEmbedding, Projects, User
-from routes import ai_chat as ai_chat_module
+from models import (
+    Achievements,
+    Certificates,
+    ChatHistory,
+    DocumentEmbedding,
+    Educations,
+    Internship,
+    Projects,
+    ResumeHistory,
+    Skills,
+    User,
+    UserDetails,
+)
+from routes import ai_chat as ai_chat_module, resume as resume_module
 
 
 class DocumentEmbeddingRouteTests(unittest.TestCase):
     def setUp(self) -> None:
-        engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
         self.TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         sqlite_tables = [
             Projects.__table__,
+            Skills.__table__,
+            Educations.__table__,
+            Internship.__table__,
+            Achievements.__table__,
+            Certificates.__table__,
+            UserDetails.__table__,
             DocumentEmbedding.__table__,
+            ChatHistory.__table__,
+            ResumeHistory.__table__,
         ]
         Base.metadata.drop_all(bind=engine, tables=sqlite_tables)
         Base.metadata.create_all(bind=engine, tables=sqlite_tables)
@@ -51,7 +76,7 @@ class DocumentEmbeddingRouteTests(unittest.TestCase):
                 tech_stack="FastAPI",
                 github_url="https://example.com",
                 live_link="https://app.example.com",
-                user_uuid=UUID("00000000-0000-0000-0000-000000000001"),
+                user_uuid="00000000-0000-0000-0000-000000000001",
             )
         )
         self.session.commit()
@@ -95,6 +120,33 @@ class DocumentEmbeddingRouteTests(unittest.TestCase):
         payload = response.json()
         self.assertIn("portfolio app", payload["answer"].lower())
         self.assertTrue(payload["sources"])
+
+        history_response = self.client.get("/ai/history")
+        self.assertEqual(history_response.status_code, 200, history_response.text)
+        self.assertEqual(len(history_response.json()["items"]), 1)
+
+    def test_resume_history_is_persisted_and_listed(self) -> None:
+        class FakeResumeService:
+            def select_resume_content(self, *args, **kwargs):
+                return {"summary": "test"}
+
+            def render_docx(self, *args, **kwargs):
+                return b"PK\x03\x04"
+
+        with patch.object(resume_module, "ResumeService", FakeResumeService):
+            response = self.client.post(
+                "/resume/generate",
+                json={"job_description": "Senior backend engineer"},
+            )
+
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertEqual(payload["status"], "completed")
+
+        history_response = self.client.get("/resume/history")
+        self.assertEqual(history_response.status_code, 200, history_response.text)
+        self.assertEqual(len(history_response.json()["items"]), 1)
+        self.assertEqual(history_response.json()["items"][0]["job_description"], "Senior backend engineer")
 
 
 if __name__ == "__main__":

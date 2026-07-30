@@ -1,5 +1,5 @@
 import os
-from uuid import UUID
+from datetime import datetime
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
@@ -14,6 +14,7 @@ from embedding_utils import embed_text
 from models import (
     Achievements,
     Certificates,
+    ChatHistory,
     DocumentEmbedding,
     Educations,
     Internship,
@@ -21,6 +22,7 @@ from models import (
     Skills,
     User,
     UserDetails,
+    _uuid_value,
 )
 
 load_dotenv()
@@ -40,6 +42,20 @@ class AskResponse(BaseModel):
     sources: list[SourceReference]
 
 
+class ChatHistoryItem(BaseModel):
+    id: int
+    question: str
+    answer: str
+    sources: list[SourceReference] | None = None
+    created_at: datetime | None = None
+
+
+class ChatHistoryListResponse(BaseModel):
+    items: list[ChatHistoryItem]
+    limit: int
+    offset: int
+
+
 router = APIRouter(prefix="/ai", tags=["AI Service"])
 
 
@@ -50,7 +66,7 @@ def _get_groq_client() -> Groq:
     return Groq(api_key=api_key)
 
 
-def _iter_structured_profile_rows(db: Session, user_uuid: UUID):
+def _iter_structured_profile_rows(db: Session, user_uuid: str):
     tables = [
         ("projects", Projects),
         ("skills", Skills),
@@ -67,7 +83,7 @@ def _iter_structured_profile_rows(db: Session, user_uuid: UUID):
             yield source_table, row
 
 
-def _structured_profile_context(db: Session, user_uuid: UUID) -> list[tuple[str, int, str]]:
+def _structured_profile_context(db: Session, user_uuid: str) -> list[tuple[str, int, str]]:
     chunks: list[tuple[str, int, str]] = []
     for source_table, row in _iter_structured_profile_rows(db, user_uuid):
         if source_table == "projects":
@@ -105,7 +121,7 @@ def ask(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    user_uuid = UUID(current_user.user_uuid)
+    user_uuid = _uuid_value(current_user.user_uuid)
     question_embedding = embed_text(payload.question)
 
     context_chunks: list[tuple[str, int, str]] = []
@@ -160,8 +176,62 @@ def ask(
         SourceReference(source_table=source_table, source_id=source_id)
         for source_table, source_id, _ in context_chunks
     ]
-    return AskResponse(
-        answer=answer or "I don't have that information in the provided context.",
-        sources=sources,
+    answer_text = answer or "I don't have that information in the provided context."
+    history_entry = ChatHistory(
+        user_uuid=user_uuid,
+        question=payload.question,
+        answer=answer_text,
+        sources=[{"source_table": item.source_table, "source_id": item.source_id} for item in sources],
     )
+    db.add(history_entry)
+    db.commit()
+    db.refresh(history_entry)
+
+    return AskResponse(answer=answer_text, sources=sources)
+
+
+@router.get(
+    "/history",
+    response_model=ChatHistoryListResponse,
+    summary="List the authenticated user's AI chat history",
+    description="Return a paginated list of the authenticated user's recent question and answer pairs.",
+)
+def list_chat_history(
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_uuid = _uuid_value(current_user.user_uuid)
+    limit = max(1, min(limit, 100))
+    offset = max(0, offset)
+
+    rows = (
+        db.query(ChatHistory)
+        .filter(ChatHistory.user_uuid == user_uuid)
+        .order_by(ChatHistory.created_at.desc(), ChatHistory.id.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    items = []
+    for row in rows:
+        sources = []
+        for item in row.sources or []:
+            if isinstance(item, dict):
+                sources.append(
+                    SourceReference(source_table=item.get("source_table", ""), source_id=item.get("source_id", 0))
+                )
+        items.append(
+            ChatHistoryItem(
+                id=row.id,
+                question=row.question,
+                answer=row.answer,
+                sources=sources or None,
+                created_at=row.created_at,
+            )
+        )
+
+    return ChatHistoryListResponse(items=items, limit=limit, offset=offset)
 

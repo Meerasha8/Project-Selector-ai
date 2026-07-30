@@ -1,14 +1,36 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Table
-from database import Base
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Table, JSON
+from database import Base, engine
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 from pydantic import BaseModel
 
+try:
+    from sqlalchemy.dialects.postgresql import UUID as PGUUID
+except Exception:  # pragma: no cover
+    PGUUID = None
+
+
+def _uuid_column(*, nullable: bool = False, index: bool = False):
+    backend = engine.url.get_backend_name() if engine is not None else ""
+    if backend == "sqlite" or PGUUID is None:
+        return Column(String(36), nullable=nullable, index=index)
+    return Column(PGUUID(as_uuid=True), nullable=nullable, index=index)
+
+
+def _uuid_value(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if hasattr(value, "hex"):
+        return value.hex
+    return str(value)
+
+
 auth_users = Table(
     "users",
     Base.metadata,
-    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("id", PGUUID(as_uuid=True) if PGUUID is not None and engine.url.get_backend_name() != "sqlite" else String(36), primary_key=True),
     schema="auth",
 )
 
@@ -30,7 +52,7 @@ class UserDetails(Base):
     portfolio_link = Column(String(40), index=True)
     location = Column(String(40), index=True)
     profession_summary = Column(String(255), index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
 
 
 
@@ -44,7 +66,7 @@ class Educations(Base):
     end_year = Column(Integer,index=True)
     college_name = Column(String(50), index=True)
     location = Column(String(50),index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
 
 
     
@@ -54,7 +76,7 @@ class Certificates(Base):
     id = Column(Integer, primary_key=True, index=True)
     certificate_issuer = Column(String(255),index=True)
     certificate_name = Column(String(50), index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
 
     
 class Internship(Base):
@@ -65,7 +87,7 @@ class Internship(Base):
     role = Column(String(20), index=True)
     description = Column(String(255),index=True)
     Duration = Column(String(20),index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
 
     
 class Achievements(Base):
@@ -73,7 +95,7 @@ class Achievements(Base):
     __tablename__="achievements"
     id = Column(Integer, primary_key=True, index=True)
     description = Column(String(255),index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
     
 
 class Projects(Base):
@@ -85,7 +107,7 @@ class Projects(Base):
     tech_stack = Column(String(50),index=True)
     github_url = Column(String(255), index=True)
     live_link = Column(String(255), index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
     
 class Skills(Base):
 
@@ -93,15 +115,36 @@ class Skills(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), index=True)
     description = Column(String(255), index=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
-    
+    user_uuid = _uuid_column(nullable=False)
 
+
+class ChatHistory(Base):
+    __tablename__ = "chat_history"
+    id = Column(Integer, primary_key=True, index=True)
+    user_uuid = _uuid_column(nullable=False, index=True)
+    question = Column(String, nullable=False)
+    answer = Column(String, nullable=False)
+    sources = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ResumeHistory(Base):
+    __tablename__ = "resume_history"
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = _uuid_column(nullable=False, index=True)
+    user_uuid = _uuid_column(nullable=False, index=True)
+    job_description = Column(String, nullable=False)
+    status = Column(String(20), nullable=False, default="queued")
+    download_url = Column(String, nullable=True)
+    error = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class DocumentEmbedding(Base):
     __tablename__ = "document_embeddings"
     id = Column(Integer, primary_key=True)
-    user_uuid = Column(UUID(as_uuid=True), ForeignKey("auth.users.id"), nullable=False)
+    user_uuid = _uuid_column(nullable=False)
     source_table = Column(String, nullable=False)
     source_id = Column(Integer, nullable=False)
     content = Column(String, nullable=False)

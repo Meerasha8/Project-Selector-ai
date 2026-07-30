@@ -191,6 +191,39 @@ Errors:
 - 500: missing GROQ_API_KEY
 - 502: the AI service failed to respond
 
+## AI History
+### GET /ai/history
+Returns the authenticated user's recent AI question/answer pairs, most recent first.
+
+Query params:
+- limit: number of items to return (default 20, max 100)
+- offset: number of items to skip (default 0)
+
+Success response:
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "question": "What projects has this user built?",
+      "answer": "The user built a portfolio app.",
+      "sources": [
+        {
+          "source_table": "projects",
+          "source_id": 1
+        }
+      ],
+      "created_at": "2026-07-30T00:00:00Z"
+    }
+  ],
+  "limit": 20,
+  "offset": 0
+}
+```
+
+Errors:
+- 401: invalid or missing bearer token
+
 ## Resume Endpoint
 ### POST /resume/generate
 Starts resume generation for a job description.
@@ -230,6 +263,35 @@ Downloads the generated DOCX resume.
 Errors:
 - 404: job not found
 - 409: resume generation is not complete yet
+
+## Resume History
+### GET /resume/history
+Returns the authenticated user's recent resume generation jobs, most recent first.
+
+Query params:
+- limit: number of items to return (default 20, max 100)
+- offset: number of items to skip (default 0)
+
+Success response:
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "job_id": "uuid",
+      "status": "completed",
+      "job_description": "Senior Python backend engineer",
+      "created_at": "2026-07-30T00:00:00Z",
+      "download_url": "/resume/generate/uuid/download"
+    }
+  ],
+  "limit": 20,
+  "offset": 0
+}
+```
+
+Errors:
+- 401: invalid or missing bearer token
 
 ## Document Embeddings
 ### POST /document-embeddings/

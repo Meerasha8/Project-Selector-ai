@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -7,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from auth.dependencies import get_current_user
 from dependencies import get_db
-from models import DocumentEmbedding, User
+from models import DocumentEmbedding, User, _uuid_value
 
 
 class DocumentEmbeddingCreate(BaseModel):
@@ -56,7 +54,7 @@ def create_document_embedding(
 ):
     normalized_embedding = _normalize_embedding(payload.embedding)
     db_item = DocumentEmbedding(
-        user_uuid=UUID(current_user.user_uuid),
+        user_uuid=_uuid_value(current_user.user_uuid),
         source_table=payload.source_table,
         source_id=payload.source_id,
         content=payload.content,
@@ -75,7 +73,7 @@ def list_document_embeddings(
 ):
     statement = (
         select(DocumentEmbedding)
-        .where(DocumentEmbedding.user_uuid == UUID(current_user.user_uuid))
+        .where(DocumentEmbedding.user_uuid == _uuid_value(current_user.user_uuid))
         .order_by(DocumentEmbedding.id.desc())
     )
     items = db.scalars(statement).all()
@@ -91,7 +89,7 @@ def get_document_embedding(
     item = (
         db.query(DocumentEmbedding)
         .filter(DocumentEmbedding.id == embedding_id)
-        .filter(DocumentEmbedding.user_uuid == UUID(current_user.user_uuid))
+        .filter(DocumentEmbedding.user_uuid == _uuid_value(current_user.user_uuid))
         .first()
     )
     if item is None:
@@ -109,7 +107,7 @@ def update_document_embedding(
     item = (
         db.query(DocumentEmbedding)
         .filter(DocumentEmbedding.id == embedding_id)
-        .filter(DocumentEmbedding.user_uuid == UUID(current_user.user_uuid))
+        .filter(DocumentEmbedding.user_uuid == _uuid_value(current_user.user_uuid))
         .first()
     )
     if item is None:
@@ -134,7 +132,7 @@ def delete_document_embedding(
     item = (
         db.query(DocumentEmbedding)
         .filter(DocumentEmbedding.id == embedding_id)
-        .filter(DocumentEmbedding.user_uuid == UUID(current_user.user_uuid))
+        .filter(DocumentEmbedding.user_uuid == _uuid_value(current_user.user_uuid))
         .first()
     )
     if item is None:
