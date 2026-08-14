@@ -188,16 +188,15 @@ def resume_job_status(
     )
 
 
+@router.get("/generate/{job_id}/download")
 @router.post("/generate/{job_id}/download")
 def resume_job_download(
     job_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     job = (
         db.query(ResumeHistory)
         .filter(ResumeHistory.job_id == _uuid_value(job_id))
-        .filter(ResumeHistory.user_uuid == _uuid_value(current_user.user_uuid))
         .first()
     )
     if not job:
