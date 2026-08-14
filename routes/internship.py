@@ -80,7 +80,6 @@ def edit_internship(
         "role": internship.role,
         "description": internship.description,
         "duration": internship.duration,
-        "Duration": internship.duration,
     }
     result = (
         supabase.table("internship")

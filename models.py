@@ -86,7 +86,7 @@ class Internship(Base):
     company_name = Column(String(50), index=True)
     role = Column(String(20), index=True)
     description = Column(String(255),index=True)
-    Duration = Column(String(20),index=True)
+    duration = Column(String(20),index=True)
     user_uuid = _uuid_column(nullable=False)
 
     
