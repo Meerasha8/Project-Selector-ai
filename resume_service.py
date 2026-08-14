@@ -25,9 +25,42 @@ class ResumeService:
         if self.client is None:
             self.client = Groq(api_key=os.getenv("GROQ_API_KEY")) if os.getenv("GROQ_API_KEY") else None
 
+    def _create_fallback_content(self, user_data: dict[str, Any]) -> ResumeContent:
+        user_details = user_data.get("user_details", {})
+        summary = user_details.get("profession_summary") or "Experienced software engineering professional."
+        skills = [s.get("name") for s in user_data.get("skills", []) if s.get("name")]
+        
+        experience = []
+        for item in user_data.get("internship", []):
+            experience.append({
+                "role": item.get("role") or "Intern",
+                "company": item.get("company_name") or "Company",
+                "duration": item.get("duration") or item.get("Duration") or "",
+                "highlights": [item.get("description")] if item.get("description") else []
+            })
+            
+        projects = []
+        for item in user_data.get("projects", []):
+            projects.append({
+                "name": item.get("name") or "Project",
+                "highlights": [f"Tech: {item.get('tech_stack')}", item.get("description")] if item.get("description") else []
+            })
+
+        education = user_data.get("education", [])
+        certificates = user_data.get("certificates", [])
+
+        return ResumeContent(
+            summary=summary,
+            skills=skills or ["Software Development"],
+            experience=experience,
+            projects=projects,
+            education=education,
+            certificates=certificates
+        )
+
     def select_resume_content(self, job_description: str, user_data: dict[str, Any]) -> ResumeContent:
         if self.client is None:
-            raise HTTPException(status_code=500, detail="GROQ_API_KEY is not configured")
+            return self._create_fallback_content(user_data)
 
         raw_payload = json.dumps(user_data, ensure_ascii=False, indent=2)
         schema = {
@@ -53,16 +86,16 @@ class ResumeService:
             "You are selecting content for a one-page resume tailored to a job description. "
             "Use only the provided user data. Select only the most relevant projects, skills, experience, education, and certificates. "
             "Rewrite bullets concisely, action-verb-first, and quantified where possible. "
-            "Return strict JSON matching this schema: " + json.dumps(schema) + ". "
-            "Do not include prose outside the JSON."
+            "Return strict raw JSON matching this schema: " + json.dumps(schema) + ". "
+            "Do not wrap in markdown or prose outside the JSON."
         )
 
-        for attempt in range(2):
+        for attempt in range(3):
             try:
                 response = self.client.chat.completions.create(
                     model=os.getenv("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile"),
                     messages=[
-                        {"role": "system", "content": "Return only valid JSON matching the requested schema."},
+                        {"role": "system", "content": "Return only raw valid JSON matching the requested schema. Do not use markdown codeblocks."},
                         {
                             "role": "user",
                             "content": f"Job description:\n{job_description}\n\nUser data:\n{raw_payload}\n\nInstructions:\n{prompt}",
@@ -71,14 +104,23 @@ class ResumeService:
                     temperature=0.2,
                     max_tokens=1200,
                 )
-                content = response.choices[0].message.content or "{}"
+                content = (response.choices[0].message.content or "{}").strip()
+                if content.startswith("```"):
+                    lines = content.splitlines()
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]
+                    if lines and lines[-1].startswith("```"):
+                        lines = lines[:-1]
+                    content = "\n".join(lines).strip()
+                
                 parsed = json.loads(content)
                 return ResumeContent(**parsed)
-            except Exception:
-                if attempt == 1:
+            except Exception as e:
+                print(f"Groq resume parsing attempt {attempt} error: {e}")
+                if attempt == 2:
                     break
 
-        raise HTTPException(status_code=502, detail="Groq failed to return valid resume JSON")
+        return self._create_fallback_content(user_data)
 
     def render_docx(self, content: ResumeContent, user_details: dict[str, Any] | None = None) -> bytes:
         document = Document()
