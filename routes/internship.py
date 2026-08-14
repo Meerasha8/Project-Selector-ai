@@ -60,6 +60,7 @@ def add_internship(
         "role": internship.role,
         "description": internship.description,
         "duration": internship.duration,
+        "Duration": internship.duration,
         "user_uuid": current_user.user_uuid,
     }
     result = supabase.table("internship").insert(payload).execute()
@@ -80,6 +81,7 @@ def edit_internship(
         "role": internship.role,
         "description": internship.description,
         "duration": internship.duration,
+        "Duration": internship.duration,
     }
     result = (
         supabase.table("internship")
