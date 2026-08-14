@@ -137,6 +137,8 @@ class ResumeHistory(Base):
     status = Column(String(20), nullable=False, default="queued")
     download_url = Column(String, nullable=True)
     error = Column(String, nullable=True)
+    template_style = Column(String(50), nullable=True, default="modern")
+    resume_content = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

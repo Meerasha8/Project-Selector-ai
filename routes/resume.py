@@ -30,6 +30,7 @@ router = APIRouter(prefix="/resume", tags=["Resume"])
 
 class ResumeRequest(BaseModel):
     job_description: str
+    template_style: str | None = "modern"
 
 
 class ResumeJobResponse(BaseModel):
@@ -50,6 +51,7 @@ class ResumeHistoryItem(BaseModel):
     job_id: str
     status: str
     job_description: str
+    template_style: str | None = "modern"
     created_at: datetime | None = None
     download_url: str | None = None
 
@@ -87,6 +89,8 @@ def _collect_user_resume_data(db: Session, user_uuid: str) -> dict[str, Any]:
             "github": user_details.github_url if user_details else None,
             "linkedin": user_details.linkedin_url if user_details else None,
             "portfolio": user_details.portfolio_link if user_details else None,
+            "location": user_details.location if user_details else None,
+            "profession_summary": user_details.profession_summary if user_details else None,
         },
         "education": [
             {
@@ -135,12 +139,14 @@ def generate_resume_job(
 ):
     user_uuid = current_user.user_uuid
     job_id = uuid.uuid4()
+    template = payload.template_style or "modern"
 
     job_record = ResumeHistory(
         job_id=_uuid_value(job_id),
         user_uuid=_uuid_value(user_uuid),
         job_description=payload.job_description,
         status="queued",
+        template_style=template,
     )
     db.add(job_record)
     db.commit()
@@ -150,12 +156,13 @@ def generate_resume_job(
         user_data = _collect_user_resume_data(db, user_uuid)
         service = ResumeService()
         content = service.select_resume_content(payload.job_description, user_data)
-        doc_bytes = service.render_docx(content, user_data.get("user_details"))
+        doc_bytes = service.render_docx(content, user_data.get("user_details"), template_style=template)
         file_path = _resume_file_path(job_id)
         with open(file_path, "wb") as tmp_file:
             tmp_file.write(doc_bytes)
         job_record.status = "completed"
         job_record.download_url = f"/resume/generate/{job_id}/download"
+        job_record.resume_content = content.dict()
         job_record.error = None
     except Exception as exc:
         job_record.status = "failed"
@@ -170,6 +177,31 @@ def generate_resume_job(
         status=job_record.status,
         message="Resume generation completed" if job_record.status == "completed" else "Resume generation failed",
     )
+
+
+@router.get("/generate/{job_id}/preview")
+def resume_job_preview(
+    job_id: str,
+    db: Session = Depends(get_db),
+):
+    job = db.query(ResumeHistory).filter(ResumeHistory.job_id == _uuid_value(job_id)).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    user_data = _collect_user_resume_data(db, job.user_uuid)
+    content = getattr(job, "resume_content", None)
+    if not content:
+        service = ResumeService()
+        content = service.select_resume_content(job.job_description, user_data).dict()
+
+    return {
+        "job_id": str(job.job_id),
+        "status": job.status,
+        "template_style": getattr(job, "template_style", "modern") or "modern",
+        "job_description": job.job_description,
+        "user_details": user_data.get("user_details", {}),
+        "content": content,
+    }
 
 
 @router.get("/generate/{job_id}", response_model=ResumeGenerationStatusResponse)
@@ -249,9 +281,58 @@ def resume_history(
                 job_id=str(row.job_id),
                 status=row.status,
                 job_description=description,
+                template_style=getattr(row, "template_style", "modern") or "modern",
                 created_at=row.created_at,
                 download_url=row.download_url if row.status == "completed" else None,
             )
         )
 
     return ResumeHistoryListResponse(items=items, limit=limit, offset=offset)
+
+
+@router.delete(
+    "/history/{history_id}",
+    summary="Delete a single resume generation history item",
+)
+def delete_resume_history_item(
+    history_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_uuid = _uuid_value(current_user.user_uuid)
+    job = db.query(ResumeHistory).filter(ResumeHistory.id == history_id).filter(ResumeHistory.user_uuid == user_uuid).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Resume history item not found")
+
+    file_path = _resume_file_path(job.job_id)
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
+
+    db.delete(job)
+    db.commit()
+    return {"message": f"Resume history item {history_id} deleted successfully"}
+
+
+@router.delete(
+    "/history",
+    summary="Clear all resume generation history for authenticated user",
+)
+def clear_resume_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_uuid = _uuid_value(current_user.user_uuid)
+    jobs = db.query(ResumeHistory).filter(ResumeHistory.user_uuid == user_uuid).all()
+    for job in jobs:
+        file_path = _resume_file_path(job.job_id)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass
+        db.delete(job)
+    db.commit()
+    return {"message": "All resume history cleared successfully"}
