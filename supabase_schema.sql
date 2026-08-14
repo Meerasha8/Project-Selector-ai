@@ -95,7 +95,7 @@ create table if not exists public.internship (
     company_name text not null,
     role text,
     description text,
-    "Duration" text,
+    "duration" text,
     user_uuid uuid not null references auth.users(id) on delete cascade,
     created_at timestamptz default now(),
     updated_at timestamptz default now()

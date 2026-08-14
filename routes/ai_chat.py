@@ -99,7 +99,7 @@ def _structured_profile_context(db: Session, user_uuid: str) -> list[tuple[str, 
                 f"location={row.location or ''}; summary={row.profession_summary or ''}."
             )
         elif source_table == "internship":
-            content = f"Internship: {row.company_name}. Role: {row.role}. Description: {row.description}. Duration: {row.Duration}."
+            content = f"Internship: {row.company_name}. Role: {row.role}. Description: {row.description}. Duration: {row.duration}."
         elif source_table == "achievements":
             content = f"Achievement: {row.description}."
         elif source_table == "certificates":

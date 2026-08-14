@@ -108,7 +108,7 @@ def _collect_user_resume_data(db: Session, user_uuid: str) -> dict[str, Any]:
                 "role": item.role,
                 "company_name": item.company_name,
                 "description": item.description,
-                "Duration": item.Duration,
+                "duration": item.duration,
             }
             for item in internship
         ],
