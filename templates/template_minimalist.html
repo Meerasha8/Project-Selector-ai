@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minimalist ATS Resume Template</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & CONFIGURATION
+       Font Pairing: Inter (Google Fonts)
+       Palette: 
+         - Primary Text: #0f172a (Slate 900)
+         - Secondary Text: #475569 (Slate 600)
+         - Accent Color: #0284c7 (Sky Blue 600)
+         - Border/Divider: #e2e8f0 (Slate 200)
+       Spacing Scale: 4px, 8px, 12px, 16px, 24px
+       ========================================================================== */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #0f172a;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .resume-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 24px 32px;
+    }
+
+    /* Header */
+    .resume-header {
+      margin-bottom: 20px;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 14px;
+    }
+
+    .candidate-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .candidate-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0284c7;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .contact-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 10.5px;
+      color: #475569;
+    }
+
+    .contact-item {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .contact-item:not(:last-child)::after {
+      content: "•";
+      margin-left: 12px;
+      color: #cbd5e1;
+    }
+
+    /* Section Component */
+    .resume-section {
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+    }
+
+    /* Summary */
+    .summary-text {
+      font-size: 11px;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    /* Skills Grid */
+    .skills-category {
+      margin-bottom: 6px;
+    }
+
+    .skills-category-name {
+      font-weight: 600;
+      color: #0f172a;
+      display: inline;
+    }
+
+    .skills-list {
+      display: inline;
+      color: #334155;
+    }
+
+    /* Experience & Projects Items */
+    .timeline-item {
+      margin-bottom: 12px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 3px;
+    }
+
+    .item-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .item-subtitle {
+      font-size: 11px;
+      font-weight: 500;
+      color: #0284c7;
+    }
+
+    .item-date {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .item-description {
+      font-size: 10.5px;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .bullet-list {
+      list-style-type: disc;
+      margin-left: 16px;
+    }
+
+    .bullet-list li {
+      font-size: 10.5px;
+      color: #334155;
+      margin-bottom: 3px;
+      line-height: 1.5;
+    }
+
+    /* Education */
+    .education-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Print Optimizations */
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .resume-container {
+        padding: 0;
+        max-width: 100%;
+      }
+      .resume-section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="resume-container">
+    <!-- Header -->
+    <header class="resume-header">
+      <h1 class="candidate-name">Alex Mercer</h1>
+      <div class="candidate-title">Senior Full-Stack & Systems Engineer</div>
+      <div class="contact-info">
+        <span class="contact-item">alex.mercer@dev.io</span>
+        <span class="contact-item">+1 (555) 019-2834</span>
+        <span class="contact-item">San Francisco, CA</span>
+        <span class="contact-item">github.com/alexmercer</span>
+        <span class="contact-item">linkedin.com/in/alexmercer</span>
+      </div>
+    </header>
+
+    <!-- Professional Summary -->
+    <section class="resume-section">
+      <h2 class="section-title">Professional Summary</h2>
+      <p class="summary-text">
+        Performance-driven Full-Stack Engineer with 6+ years of experience engineering high-throughput RESTful APIs, distributed microservices, and reactive mobile applications. Proven track record of optimizing database queries to reduce latency by 45% and architecting automated CI/CD pipelines for zero-downtime deployments.
+      </p>
+    </section>
+
+    <!-- Technical Skills -->
+    <section class="resume-section">
+      <h2 class="section-title">Technical Expertise</h2>
+      <div class="skills-category">
+        <span class="skills-category-name">Languages & Runtimes:</span>
+        <span class="skills-list">Python (FastAPI, Django), JavaScript/TypeScript (React Native, Node.js), Go, SQL</span>
+      </div>
+      <div class="skills-category">
+        <span class="skills-category-name">Databases & Infrastructure:</span>
+        <span class="skills-list">PostgreSQL, Supabase, Redis, Docker, Kubernetes, AWS (S3, Lambda), Vector DBs (pgvector)</span>
+      </div>
+      <div class="skills-category">
+        <span class="skills-category-name">Frameworks & Tools:</span>
+        <span class="skills-list">Expo, Tailwind CSS, GraphQL, Groq AI API, Git, CI/CD Actions, PyTest, Jest</span>
+      </div>
+    </section>
+
+    <!-- Work Experience -->
+    <section class="resume-section">
+      <h2 class="section-title">Professional Experience</h2>
+      
+      <div class="timeline-item">
+        <div class="item-header">
+          <div>
+            <span class="item-title">Lead Software Engineer</span>
+            <span class="item-subtitle"> — CloudScale Technologies</span>
+          </div>
+          <span class="item-date">2023 – Present | San Francisco, CA</span>
+        </div>
+        <ul class="bullet-list">
+          <li>Architected asynchronous Python/FastAPI microservices processing 2.5M+ daily transactions with 99.98% uptime.</li>
+          <li>Engineered cross-platform React Native mobile application for iOS and Android utilizing Expo Go and NativeWind styling.</li>
+          <li>Implemented vector similarity search engine with Supabase and pgvector, reducing query retrieval response times from 1.2s to 180ms.</li>
+        </ul>
+      </div>
+
+      <div class="timeline-item">
+        <div class="item-header">
+          <div>
+            <span class="item-title">Senior Full-Stack Developer</span>
+            <span class="item-subtitle"> — DataPulse Systems</span>
+          </div>
+          <span class="item-date">2021 – 2023 | San Jose, CA</span>
+        </div>
+        <ul class="bullet-list">
+          <li>Led a pod of 5 engineers in migrating a monolithic legacy codebase into modular Docker containers deployed on AWS ECS.</li>
+          <li>Built custom DOCX & PDF dynamic generation pipeline enabling real-time automated document rendering for 150k active users.</li>
+          <li>Mentored junior engineers, established unit testing coverage standards (>85%), and streamlined code review procedures.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Key Projects -->
+    <section class="resume-section">
+      <h2 class="section-title">Featured Projects</h2>
+      <div class="timeline-item">
+        <div class="item-header">
+          <span class="item-title">AI Knowledge & Resume Workspace App</span>
+          <span class="item-date">Python, React Native, Supabase, Groq</span>
+        </div>
+        <ul class="bullet-list">
+          <li>Developed cross-platform mobile application supporting JWT auth, RAG AI chatbot, and instant DOCX resume creation.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Education & Certifications -->
+    <section class="resume-section">
+      <h2 class="section-title">Education & Certifications</h2>
+      <div class="education-grid">
+        <div>
+          <div class="item-title">B.S. in Computer Science</div>
+          <div class="item-subtitle">University of California, Berkeley (2017 – 2021)</div>
+          <div class="item-description">GPA: 3.85 / 4.0 • Honors Graduate</div>
+        </div>
+        <div>
+          <div class="item-title">AWS Certified Solutions Architect</div>
+          <div class="item-subtitle">Amazon Web Services (Issued 2024)</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

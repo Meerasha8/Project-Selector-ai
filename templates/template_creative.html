@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Creative Professional Resume Template</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DESIGN TOKENS & CONFIGURATION
+       Font Family: Plus Jakarta Sans (Google Fonts)
+       Palette:
+         - Top Banner: #0f172a (Dark Slate 900)
+         - Banner Accent: #38bdf8 (Sky Blue)
+         - Primary Accent: #6366f1 (Indigo 600)
+         - Dark Text: #0f172a (Slate 900)
+         - Body Text: #334155 (Slate 700)
+         - Muted Text: #64748b (Slate 500)
+         - Pill Background: #f1f5f9 (Slate 100)
+         - Pill Border: #e2e8f0 (Slate 200)
+       ========================================================================== */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #334155;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .resume-card {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      overflow: hidden;
+    }
+
+    /* Top Color Banner Header */
+    .header-banner {
+      background-color: #0f172a;
+      padding: 26px 32px;
+      color: #ffffff;
+      position: relative;
+    }
+
+    .candidate-name {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .candidate-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #38bdf8;
+      margin-top: 4px;
+    }
+
+    .contact-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #334155;
+      font-size: 10.5px;
+      color: #cbd5e1;
+    }
+
+    .contact-item {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .contact-item-val {
+      color: #f8fafc;
+      font-weight: 500;
+    }
+
+    /* Resume Content Padding */
+    .content-body {
+      padding: 24px 32px;
+    }
+
+    /* Creative Section Titles */
+    .section-block {
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .header-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background-color: #6366f1;
+      margin-right: 8px;
+    }
+
+    .section-header-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .header-line {
+      flex: 1;
+      height: 1.5px;
+      background: linear-gradient(to right, #e2e8f0, #ffffff);
+      margin-left: 12px;
+    }
+
+    /* Summary */
+    .summary-text {
+      font-size: 11px;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    /* Creative Skill Pills */
+    .pills-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .skill-pill {
+      font-size: 10px;
+      font-weight: 600;
+      background-color: #f1f5f9;
+      color: #4338ca;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Experience Items */
+    .timeline-card {
+      margin-bottom: 14px;
+      padding-left: 12px;
+      border-left: 2px solid #6366f1;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .card-role {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .card-company {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6366f1;
+    }
+
+    .card-date {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    .bullet-list {
+      list-style-type: disc;
+      margin-left: 14px;
+      margin-top: 4px;
+    }
+
+    .bullet-list li {
+      font-size: 10.5px;
+      color: #334155;
+      margin-bottom: 3px;
+    }
+
+    /* Education Grid */
+    .edu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .edu-box {
+      background-color: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .edu-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .edu-sub {
+      font-size: 10.5px;
+      color: #6366f1;
+      font-weight: 600;
+    }
+
+    .edu-desc {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .resume-card {
+        border: none;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="resume-card">
+    <!-- Top Header Banner -->
+    <header class="header-banner">
+      <h1 class="candidate-name">Alex Mercer</h1>
+      <div class="candidate-title">Senior Full-Stack & AI Systems Engineer</div>
+      
+      <div class="contact-bar">
+        <div class="contact-item">
+          <span>Email: </span><span class="contact-item-val">&nbsp;alex.mercer@dev.io</span>
+        </div>
+        <div class="contact-item">
+          <span>Phone: </span><span class="contact-item-val">&nbsp;+1 (555) 019-2834</span>
+        </div>
+        <div class="contact-item">
+          <span>Location: </span><span class="contact-item-val">&nbsp;San Francisco, CA</span>
+        </div>
+        <div class="contact-item">
+          <span>Portfolio: </span><span class="contact-item-val">&nbsp;alexmercer.dev</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Body Content -->
+    <div class="content-body">
+      <!-- Profile Summary -->
+      <section class="section-block">
+        <div class="section-header">
+          <div class="header-dot"></div>
+          <h2 class="section-header-title">About Me</h2>
+          <div class="header-line"></div>
+        </div>
+        <p class="summary-text">
+          Innovative Full-Stack Engineer specializing in high-throughput backend services and modern cross-platform mobile apps. Hands-on experience integrating RAG AI capabilities, Supabase authentication, and containerized cloud architectures to deliver fast, secure user experiences.
+        </p>
+      </section>
+
+      <!-- Key Skills -->
+      <section class="section-block">
+        <div class="section-header">
+          <div class="header-dot"></div>
+          <h2 class="section-header-title">Skills & Technologies</h2>
+          <div class="header-line"></div>
+        </div>
+        <div class="pills-container">
+          <span class="skill-pill">Python (FastAPI / Django)</span>
+          <span class="skill-pill">React Native / Expo</span>
+          <span class="skill-pill">TypeScript / Node.js</span>
+          <span class="skill-pill">PostgreSQL / Supabase</span>
+          <span class="skill-pill">Redis</span>
+          <span class="skill-pill">pgvector / Groq AI</span>
+          <span class="skill-pill">AWS (ECS / S3)</span>
+          <span class="skill-pill">Docker & Kubernetes</span>
+          <span class="skill-pill">Tailwind CSS</span>
+          <span class="skill-pill">CI/CD & Git</span>
+        </div>
+      </section>
+
+      <!-- Professional Experience -->
+      <section class="section-block">
+        <div class="section-header">
+          <div class="header-dot"></div>
+          <h2 class="section-header-title">Work Experience</h2>
+          <div class="header-line"></div>
+        </div>
+
+        <div class="timeline-card">
+          <div class="card-top">
+            <div>
+              <span class="card-role">Lead Software Engineer</span>
+              <span class="card-company"> — CloudScale Tech</span>
+            </div>
+            <span class="card-date">2023 – Present | San Francisco, CA</span>
+          </div>
+          <ul class="bullet-list">
+            <li>Engineered scalable FastAPI backend processing 2.5M+ daily requests with 99.98% uptime.</li>
+            <li>Built cross-platform React Native Expo mobile application with offline-first storage and Tailwind CSS.</li>
+            <li>Implemented vector database RAG search engine with pgvector, slashing response latencies by 80%.</li>
+          </ul>
+        </div>
+
+        <div class="timeline-card">
+          <div class="card-top">
+            <div>
+              <span class="card-role">Senior Full-Stack Developer</span>
+              <span class="card-company"> — DataPulse Systems</span>
+            </div>
+            <span class="card-date">2021 – 2023 | San Jose, CA</span>
+          </div>
+          <ul class="bullet-list">
+            <li>Migrated monolithic applications to Docker containers on AWS ECS, reducing operational costs by 30%.</li>
+            <li>Built high-performance automated document generation service in Python for 150k monthly users.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Featured Projects -->
+      <section class="section-block">
+        <div class="section-header">
+          <div class="header-dot"></div>
+          <h2 class="section-header-title">Featured Projects</h2>
+          <div class="header-line"></div>
+        </div>
+
+        <div class="timeline-card">
+          <div class="card-top">
+            <span class="card-role">AI Knowledge & Resume Builder Mobile App</span>
+            <span class="card-date">Python • Expo • Supabase</span>
+          </div>
+          <ul class="bullet-list">
+            <li>Developed mobile application supporting profile CRUD operations, Groq RAG chatbot, and DOCX resume rendering.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Education & Certifications -->
+      <section class="section-block">
+        <div class="section-header">
+          <div class="header-dot"></div>
+          <h2 class="section-header-title">Education & Credentials</h2>
+          <div class="header-line"></div>
+        </div>
+
+        <div class="edu-grid">
+          <div class="edu-box">
+            <div class="edu-title">B.S. in Computer Science</div>
+            <div class="edu-sub">UC Berkeley (2017 – 2021)</div>
+            <div class="edu-desc">GPA: 3.85 / 4.0 • Honors Graduate</div>
+          </div>
+          <div class="edu-box">
+            <div class="edu-title">AWS Certified Solutions Architect</div>
+            <div class="edu-sub">Amazon Web Services</div>
+            <div class="edu-desc">Issued 2024 • Validation ID: AWS-99210</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>
