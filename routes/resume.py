@@ -295,12 +295,22 @@ def resume_history(
     summary="Delete a single resume generation history item",
 )
 def delete_resume_history_item(
-    history_id: int,
+    history_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     user_uuid = _uuid_value(current_user.user_uuid)
-    job = db.query(ResumeHistory).filter(ResumeHistory.id == history_id).filter(ResumeHistory.user_uuid == user_uuid).first()
+    query = db.query(ResumeHistory).filter(ResumeHistory.user_uuid == user_uuid)
+    
+    job = None
+    if history_id.isdigit():
+        job = query.filter(ResumeHistory.id == int(history_id)).first()
+    if not job:
+        try:
+            job = query.filter(ResumeHistory.job_id == _uuid_value(history_id)).first()
+        except Exception:
+            pass
+
     if not job:
         raise HTTPException(status_code=404, detail="Resume history item not found")
 
