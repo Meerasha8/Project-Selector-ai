@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ user_details.name | default('Mohamed Meerasha M') }} - Resume</title>
+  <!-- Google Fonts: Plus Jakarta Sans (Static weights for WeasyPrint rendering) -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    /* ==========================================================================
+       TEMPLATE 3: BOLD HEADER STYLE
+       Target: Modern Senior Engineers & Technical Specialists
+       Font: Plus Jakarta Sans
+       Palette:
+         - Header Band: #0f172a (Dark Slate 900)
+         - Header Accent: #38bdf8 (Sky Blue 400)
+         - Section Accent: #6366f1 (Indigo 600)
+         - Body Text: #334155 (Slate 700)
+         - Muted Text: #64748b (Slate 500)
+         - Divider: #e2e8f0 (Slate 200)
+       ========================================================================== */
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+      font-size: 9.5pt;
+      line-height: 1.45;
+      color: #334155;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .resume-wrapper {
+      width: 100%;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    /* Top Color Banner Header */
+    .header-banner {
+      background-color: #0f172a;
+      padding: 22pt 24pt 16pt 24pt;
+      color: #ffffff;
+    }
+
+    .candidate-name {
+      font-size: 22pt;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.4pt;
+      line-height: 1.1;
+    }
+
+    .candidate-title {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #38bdf8;
+      margin-top: 4pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+    }
+
+    .contact-bar {
+      margin-top: 12pt;
+      padding-top: 8pt;
+      border-top: 1px solid #334155;
+      font-size: 8.8pt;
+      color: #cbd5e1;
+    }
+
+    .contact-item {
+      display: inline-block;
+    }
+
+    .contact-sep {
+      color: #64748b;
+      margin: 0 6px;
+    }
+
+    /* Content Body Padding */
+    .content-body {
+      padding: 18pt 24pt;
+    }
+
+    .section-block {
+      margin-bottom: 14pt;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .section-header-table {
+      width: 100%;
+      margin-bottom: 6pt;
+    }
+
+    .section-title {
+      font-size: 10.5pt;
+      font-weight: 800;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.8pt;
+      white-space: nowrap;
+    }
+
+    .section-line {
+      width: 100%;
+      height: 1.5px;
+      background-color: #e2e8f0;
+    }
+
+    .section-accent-bar {
+      width: 18px;
+      height: 3.5px;
+      background-color: #6366f1;
+      margin-bottom: 3pt;
+    }
+
+    /* Summary */
+    .summary-text {
+      font-size: 9.2pt;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    /* Skills Grid */
+    .skills-row {
+      margin-bottom: 3pt;
+      font-size: 9.2pt;
+    }
+
+    .skills-label {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    /* Experience Items */
+    .exp-item {
+      margin-bottom: 10pt;
+      padding-left: 10px;
+      border-left: 2.5px solid #6366f1;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .exp-header-table {
+      width: 100%;
+      margin-bottom: 2pt;
+    }
+
+    .exp-role {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .exp-company {
+      font-size: 9.2pt;
+      font-weight: 600;
+      color: #6366f1;
+    }
+
+    .exp-date {
+      font-size: 8.5pt;
+      font-weight: 500;
+      color: #64748b;
+      text-align: right;
+    }
+
+    .bullet-list {
+      margin-left: 14px;
+      margin-top: 3pt;
+    }
+
+    .bullet-list li {
+      font-size: 9pt;
+      color: #334155;
+      margin-bottom: 2pt;
+      line-height: 1.45;
+    }
+
+    /* Education Grid */
+    .edu-table {
+      width: 100%;
+    }
+
+    .edu-cell {
+      width: 50%;
+      vertical-align: top;
+      padding-right: 10px;
+    }
+
+    .edu-degree {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .edu-school {
+      font-size: 8.8pt;
+      color: #6366f1;
+      font-weight: 600;
+    }
+
+    .edu-date {
+      font-size: 8.2pt;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="resume-wrapper">
+    <!-- Top Header Banner -->
+    <header class="header-banner">
+      <h1 class="candidate-name">{{ user_details.name | default('Mohamed Meerasha M') }}</h1>
+      <div class="candidate-title">{{ user_details.profession_summary_short | default('Python / Django / Flask Backend Developer') }}</div>
+      
+      <div class="contact-bar">
+        {% if user_details.email %}<span class="contact-item">Email: {{ user_details.email }}</span>{% else %}<span class="contact-item">Email: mohamed.meerasha@gmail.com</span>{% endif %}
+        <span class="contact-sep">|</span>
+        {% if user_details.phone %}<span class="contact-item">Phone: {{ user_details.phone }}</span>{% else %}<span class="contact-item">Phone: +91 98765 43210</span>{% endif %}
+        <span class="contact-sep">|</span>
+        {% if user_details.location %}<span class="contact-item">Location: {{ user_details.location }}</span>{% else %}<span class="contact-item">Location: Chennai, India</span>{% endif %}
+        {% if user_details.github %}
+        <span class="contact-sep">|</span>
+        <span class="contact-item">GitHub: {{ user_details.github }}</span>
+        {% endif %}
+        {% if user_details.linkedin %}
+        <span class="contact-sep">|</span>
+        <span class="contact-item">LinkedIn: {{ user_details.linkedin }}</span>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <div class="content-body">
+      <!-- Profile Summary -->
+      <section class="section-block">
+        <div class="section-accent-bar"></div>
+        <h2 class="section-title">About Me</h2>
+        <p class="summary-text">
+          {{ user_details.profession_summary | default('Results-oriented Python Developer with 4+ years of hands-on experience designing robust backend architectures, RESTful APIs, and relational databases using Django, FastAPI, and Flask. Demonstrated skill in optimizing SQL query performance, containerizing applications with Docker, and building microservices for high-traffic web applications.') }}
+        </p>
+      </section>
+
+      <!-- Technical Skills -->
+      <section class="section-block">
+        <div class="section-accent-bar"></div>
+        <h2 class="section-title">Technical Expertise</h2>
+        <div class="skills-row">
+          <span class="skills-label">Languages & Runtimes: </span>
+          <span>
+            {% if skills %}
+              {% for skill in skills %}{{ skill.name | default(skill) }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% else %}
+              Python, JavaScript, SQL, HTML5, CSS3, Bash
+            {% endif %}
+          </span>
+        </div>
+        <div class="skills-row">
+          <span class="skills-label">Frameworks & Backend: </span>
+          <span>Django, FastAPI, Flask, Django REST Framework, Celery, Pydantic</span>
+        </div>
+        <div class="skills-row">
+          <span class="skills-label">Databases & Tools: </span>
+          <span>PostgreSQL, MySQL, Redis, Supabase, Docker, Docker Compose, Git, AWS (S3, EC2)</span>
+        </div>
+      </section>
+
+      <!-- Work Experience -->
+      <section class="section-block">
+        <div class="section-accent-bar"></div>
+        <h2 class="section-title">Work Experience</h2>
+
+        {% if experience %}
+          {% for exp in experience %}
+          <div class="exp-item">
+            <table class="exp-header-table">
+              <tr>
+                <td class="exp-role">{{ exp.role }} <span class="exp-company">— {{ exp.company or exp.company_name }}</span></td>
+                <td class="exp-date">{{ exp.duration or exp.Duration }}</td>
+              </tr>
+            </table>
+            <ul class="bullet-list">
+              {% if exp.bullets %}
+                {% for b in exp.bullets %}<li>{{ b }}</li>{% endfor %}
+              {% elif exp.highlights %}
+                {% for h in exp.highlights %}<li>{{ h }}</li>{% endfor %}
+              {% elif exp.description %}
+                <li>{{ exp.description }}</li>
+              {% endif %}
+            </ul>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="exp-item">
+            <table class="exp-header-table">
+              <tr>
+                <td class="exp-role">Senior Python Developer <span class="exp-company">— Tech Corp Solutions</span></td>
+                <td class="exp-date">Jan 2023 – Present</td>
+              </tr>
+            </table>
+            <ul class="bullet-list">
+              <li>Engineered high-throughput REST APIs using FastAPI and Pydantic, handling over 1.5M monthly requests with sub-120ms latency.</li>
+              <li>Redesigned PostgreSQL schema and implemented indexing strategies, boosting database query performance by 40%.</li>
+              <li>Orchestrated background job queues using Celery and Redis to process automated email notifications and data tasks.</li>
+            </ul>
+          </div>
+
+          <div class="exp-item">
+            <table class="exp-header-table">
+              <tr>
+                <td class="exp-role">Backend Developer <span class="exp-company">— WebCraft Systems</span></td>
+                <td class="exp-date">Jun 2021 – Dec 2022</td>
+              </tr>
+            </table>
+            <ul class="bullet-list">
+              <li>Developed core e-commerce backend modules in Django and Django REST Framework, integrating Stripe payment gateways.</li>
+              <li>Containerized 6 backend microservices using Docker Compose, establishing standardized local staging environments.</li>
+            </ul>
+          </div>
+
+          <div class="exp-item">
+            <table class="exp-header-table">
+              <tr>
+                <td class="exp-role">Junior Python Developer <span class="exp-company">— Apex Software Labs</span></td>
+                <td class="exp-date">Jul 2020 – May 2021</td>
+              </tr>
+            </table>
+            <ul class="bullet-list">
+              <li>Built lightweight internal utility APIs using Flask and SQLAlchemy to automate data ingestion from third-party services.</li>
+            </ul>
+          </div>
+        {% endif %}
+      </section>
+
+      <!-- Key Projects -->
+      <section class="section-block">
+        <div class="section-accent-bar"></div>
+        <h2 class="section-title">Key Projects</h2>
+        {% if projects %}
+          {% for proj in projects %}
+          <div class="exp-item">
+            <div class="exp-role">{{ proj.name }}</div>
+            <ul class="bullet-list">
+              {% if proj.bullets %}
+                {% for b in proj.bullets %}<li>{{ b }}</li>{% endfor %}
+              {% elif proj.highlights %}
+                {% for h in proj.highlights %}<li>{{ h }}</li>{% endfor %}
+              {% elif proj.description %}
+                <li>{{ proj.description }}</li>
+              {% endif %}
+            </ul>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="exp-item">
+            <div class="exp-role">AI Resume Generator & RAG Knowledge Workspace</div>
+            <ul class="bullet-list">
+              <li>Built mobile client & FastAPI backend supporting JWT auth, RAG AI chatbot, and instant DOCX/PDF resume creation.</li>
+            </ul>
+          </div>
+        {% endif %}
+      </section>
+
+      <!-- Education & Credentials -->
+      <section class="section-block">
+        <div class="section-accent-bar"></div>
+        <h2 class="section-title">Education & Credentials</h2>
+        <table class="edu-table">
+          <tr>
+            <td class="edu-cell">
+              {% if education %}
+                {% for edu in education %}
+                <div class="edu-degree">{{ edu.course_name }}</div>
+                <div class="edu-school">{{ edu.college_name }} • {{ edu.start_year }} - {{ edu.end_year }}</div>
+                {% endfor %}
+              {% else %}
+                <div class="edu-degree">B.E. in Computer Science</div>
+                <div class="edu-school">Anna University, Chennai</div>
+                <div class="edu-date">2016 – 2020 | CGPA: 8.4 / 10</div>
+              {% endif %}
+            </td>
+            <td class="edu-cell">
+              {% if certificates %}
+                {% for cert in certificates %}
+                <div class="edu-degree">{{ cert.certificate_name }}</div>
+                <div class="edu-school">{{ cert.certificate_issuer }}</div>
+                {% endfor %}
+              {% else %}
+                <div class="edu-degree">AWS Certified Developer – Associate</div>
+                <div class="edu-school">Amazon Web Services</div>
+              {% endif %}
+            </td>
+          </tr>
+        </table>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ user_details.name | default('Mohamed Meerasha M') }} - Resume</title>
+  <!-- Google Fonts: Roboto (Static weights for WeasyPrint rendering) -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+    /* ==========================================================================
+       TEMPLATE 2: MODERN TWO-COLUMN
+       Target: Modern Tech, Engineering Managers & Full-Stack Developers
+       Font: Roboto
+       Palette:
+         - Main Accent: #2563eb (Royal Blue 600)
+         - Dark Neutral: #0f172a (Slate 900)
+         - Body Text: #1e293b (Slate 800)
+         - Muted Text: #64748b (Slate 500)
+         - Sidebar Background: #f8fafc (Slate 50)
+         - Border/Divider: #e2e8f0 (Slate 200)
+       ========================================================================== */
+
+    @page {
+      size: A4 portrait;
+      margin: 8mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 9.5pt;
+      line-height: 1.45;
+      color: #1e293b;
+      background: #ffffff;
+      -webkit-print-color-adjust: exact;
+    }
+
+    /* Layout Container using table display for 100% WeasyPrint column consistency */
+    .layout-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .sidebar-cell {
+      width: 32%;
+      background-color: #f8fafc;
+      padding: 16px 14px;
+      vertical-align: top;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .main-cell {
+      width: 68%;
+      padding: 18px 20px;
+      vertical-align: top;
+    }
+
+    /* Sidebar Styling */
+    .sidebar-section {
+      margin-bottom: 18px;
+    }
+
+    .sidebar-title {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.8pt;
+      margin-bottom: 8px;
+      padding-bottom: 3px;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .contact-block {
+      margin-bottom: 8px;
+    }
+
+    .contact-label {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      color: #64748b;
+      font-weight: 700;
+      display: block;
+    }
+
+    .contact-val {
+      font-size: 8.8pt;
+      color: #0f172a;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    /* Skill Badges */
+    .skill-category-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 6px;
+      margin-bottom: 3px;
+    }
+
+    .skill-badge {
+      display: inline-block;
+      font-size: 8pt;
+      background-color: #ffffff;
+      color: #1e40af;
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid #cbd5e1;
+      font-weight: 500;
+      margin-right: 2px;
+      margin-bottom: 3px;
+    }
+
+    /* Education in Sidebar */
+    .sidebar-edu-item {
+      margin-bottom: 8px;
+    }
+
+    .edu-degree {
+      font-size: 9pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .edu-school {
+      font-size: 8.2pt;
+      color: #475569;
+    }
+
+    /* Main Content Styling */
+    .main-header {
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+
+    .candidate-name {
+      font-size: 21pt;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.1;
+      letter-spacing: -0.3pt;
+    }
+
+    .candidate-title {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #2563eb;
+      margin-top: 3px;
+    }
+
+    .main-section {
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .main-section-title {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.6pt;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 3px;
+      margin-bottom: 8px;
+    }
+
+    .summary-box {
+      font-size: 9.2pt;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    .exp-item {
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .exp-header-table {
+      width: 100%;
+      margin-bottom: 2px;
+    }
+
+    .exp-role {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .exp-company {
+      font-size: 9pt;
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    .exp-date {
+      font-size: 8.5pt;
+      font-weight: 500;
+      color: #64748b;
+      text-align: right;
+    }
+
+    .bullet-list {
+      margin-left: 14px;
+      margin-top: 3px;
+    }
+
+    .bullet-list li {
+      font-size: 9pt;
+      color: #334155;
+      margin-bottom: 2px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <table class="layout-table">
+    <tr>
+      <!-- Left Sidebar Column (32%) -->
+      <td class="sidebar-cell">
+        <!-- Contact -->
+        <div class="sidebar-section">
+          <h2 class="sidebar-title">Contact</h2>
+          <div class="contact-block">
+            <span class="contact-label">Email</span>
+            <span class="contact-val">{{ user_details.email | default('mohamed.meerasha@gmail.com') }}</span>
+          </div>
+          <div class="contact-block">
+            <span class="contact-label">Phone</span>
+            <span class="contact-val">{{ user_details.phone | default('+91 98765 43210') }}</span>
+          </div>
+          <div class="contact-block">
+            <span class="contact-label">Location</span>
+            <span class="contact-val">{{ user_details.location | default('Chennai, India') }}</span>
+          </div>
+          {% if user_details.linkedin %}
+          <div class="contact-block">
+            <span class="contact-label">LinkedIn</span>
+            <span class="contact-val">{{ user_details.linkedin }}</span>
+          </div>
+          {% else %}
+          <div class="contact-block">
+            <span class="contact-label">LinkedIn</span>
+            <span class="contact-val">linkedin.com/in/mmeerasha</span>
+          </div>
+          {% endif %}
+          {% if user_details.github %}
+          <div class="contact-block">
+            <span class="contact-label">GitHub</span>
+            <span class="contact-val">{{ user_details.github }}</span>
+          </div>
+          {% else %}
+          <div class="contact-block">
+            <span class="contact-label">GitHub</span>
+            <span class="contact-val">github.com/mmeerasha</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Skills -->
+        <div class="sidebar-section">
+          <h2 class="sidebar-title">Technical Skills</h2>
+          {% if skills %}
+            {% for skill in skills %}
+              <span class="skill-badge">{{ skill.name | default(skill) }}</span>
+            {% endfor %}
+          {% else %}
+            <div class="skill-category-title">Languages & Frameworks</div>
+            <span class="skill-badge">Python</span>
+            <span class="skill-badge">Django</span>
+            <span class="skill-badge">FastAPI</span>
+            <span class="skill-badge">Flask</span>
+            <span class="skill-badge">JavaScript</span>
+            <span class="skill-badge">SQL</span>
+            
+            <div class="skill-category-title">Databases & DevOps</div>
+            <span class="skill-badge">PostgreSQL</span>
+            <span class="skill-badge">MySQL</span>
+            <span class="skill-badge">Redis</span>
+            <span class="skill-badge">Docker</span>
+            <span class="skill-badge">Celery</span>
+            <span class="skill-badge">Git</span>
+            <span class="skill-badge">AWS</span>
+          {% endif %}
+        </div>
+
+        <!-- Education -->
+        <div class="sidebar-section">
+          <h2 class="sidebar-title">Education</h2>
+          {% if education %}
+            {% for edu in education %}
+            <div class="sidebar-edu-item">
+              <div class="edu-degree">{{ edu.course_name }}</div>
+              <div class="edu-school">{{ edu.college_name }}</div>
+              <div class="edu-school">{{ edu.start_year }} - {{ edu.end_year }}</div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="sidebar-edu-item">
+              <div class="edu-degree">B.E. Computer Science</div>
+              <div class="edu-school">Anna University, Chennai</div>
+              <div class="edu-school">2016 – 2020 | CGPA: 8.4</div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Certifications -->
+        <div class="sidebar-section">
+          <h2 class="sidebar-title">Certifications</h2>
+          {% if certificates %}
+            {% for cert in certificates %}
+            <div class="sidebar-edu-item">
+              <div class="edu-degree">{{ cert.certificate_name }}</div>
+              <div class="edu-school">{{ cert.certificate_issuer }}</div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="sidebar-edu-item">
+              <div class="edu-degree">AWS Certified Developer</div>
+              <div class="edu-school">Amazon Web Services</div>
+            </div>
+            <div class="sidebar-edu-item">
+              <div class="edu-degree">Python Professional Cert</div>
+              <div class="edu-school">Python Software Foundation</div>
+            </div>
+          {% endif %}
+        </div>
+      </td>
+
+      <!-- Right Main Content Column (68%) -->
+      <td class="main-cell">
+        <!-- Main Header -->
+        <header class="main-header">
+          <h1 class="candidate-name">{{ user_details.name | default('Mohamed Meerasha M') }}</h1>
+          <div class="candidate-title">{{ user_details.profession_summary_short | default('Python / Django / Flask Backend Developer') }}</div>
+        </header>
+
+        <!-- Summary -->
+        <section class="main-section">
+          <h2 class="main-section-title">Professional Summary</h2>
+          <p class="summary-box">
+            {{ user_details.profession_summary | default('Results-oriented Python Developer with 4+ years of hands-on experience designing robust backend architectures, RESTful APIs, and relational databases using Django, FastAPI, and Flask. Demonstrated skill in optimizing SQL query performance, containerizing applications with Docker, and building microservices for high-traffic web applications.') }}
+          </p>
+        </section>
+
+        <!-- Experience -->
+        <section class="main-section">
+          <h2 class="main-section-title">Work Experience</h2>
+
+          {% if experience %}
+            {% for exp in experience %}
+            <div class="exp-item">
+              <table class="exp-header-table">
+                <tr>
+                  <td class="exp-role">{{ exp.role }} <span class="exp-company">@ {{ exp.company or exp.company_name }}</span></td>
+                  <td class="exp-date">{{ exp.duration or exp.Duration }}</td>
+                </tr>
+              </table>
+              <ul class="bullet-list">
+                {% if exp.bullets %}
+                  {% for b in exp.bullets %}<li>{{ b }}</li>{% endfor %}
+                {% elif exp.highlights %}
+                  {% for h in exp.highlights %}<li>{{ h }}</li>{% endfor %}
+                {% elif exp.description %}
+                  <li>{{ exp.description }}</li>
+                {% endif %}
+              </ul>
+            </div>
+            {% endfor %}
+          {% else %}
+            <!-- Sample Experience Data -->
+            <div class="exp-item">
+              <table class="exp-header-table">
+                <tr>
+                  <td class="exp-role">Senior Python Developer <span class="exp-company">@ Tech Corp Solutions</span></td>
+                  <td class="exp-date">Jan 2023 – Present</td>
+                </tr>
+              </table>
+              <ul class="bullet-list">
+                <li>Engineered high-throughput REST APIs using FastAPI and Pydantic, handling over 1.5M monthly requests with sub-120ms latency.</li>
+                <li>Redesigned PostgreSQL schema and implemented indexing strategies, boosting database query performance by 40%.</li>
+                <li>Orchestrated background job queues using Celery and Redis to process automated email notifications and data tasks.</li>
+              </ul>
+            </div>
+
+            <div class="exp-item">
+              <table class="exp-header-table">
+                <tr>
+                  <td class="exp-role">Backend Developer <span class="exp-company">@ WebCraft Systems</span></td>
+                  <td class="exp-date">Jun 2021 – Dec 2022</td>
+                </tr>
+              </table>
+              <ul class="bullet-list">
+                <li>Developed core e-commerce backend modules in Django and Django REST Framework, integrating Stripe payment gateways.</li>
+                <li>Containerized 6 backend microservices using Docker Compose, establishing standardized local staging environments.</li>
+              </ul>
+            </div>
+
+            <div class="exp-item">
+              <table class="exp-header-table">
+                <tr>
+                  <td class="exp-role">Junior Python Developer <span class="exp-company">@ Apex Software Labs</span></td>
+                  <td class="exp-date">Jul 2020 – May 2021</td>
+                </tr>
+              </table>
+              <ul class="bullet-list">
+                <li>Built lightweight internal utility APIs using Flask and SQLAlchemy to automate data ingestion from third-party services.</li>
+              </ul>
+            </div>
+          {% endif %}
+        </section>
+
+        <!-- Projects -->
+        <section class="main-section">
+          <h2 class="main-section-title">Featured Projects</h2>
+          {% if projects %}
+            {% for proj in projects %}
+            <div class="exp-item">
+              <div class="exp-role">{{ proj.name }}</div>
+              <ul class="bullet-list">
+                {% if proj.bullets %}
+                  {% for b in proj.bullets %}<li>{{ b }}</li>{% endfor %}
+                {% elif proj.highlights %}
+                  {% for h in proj.highlights %}<li>{{ h }}</li>{% endfor %}
+                {% elif proj.description %}
+                  <li>{{ proj.description }}</li>
+                {% endif %}
+              </ul>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="exp-item">
+              <div class="exp-role">AI Resume Generator & RAG Knowledge Workspace</div>
+              <ul class="bullet-list">
+                <li>Built mobile client & FastAPI backend supporting JWT auth, RAG AI chatbot, and instant DOCX/PDF resume creation.</li>
+              </ul>
+            </div>
+          {% endif %}
+        </section>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

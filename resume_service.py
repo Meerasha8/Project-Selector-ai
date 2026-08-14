@@ -133,6 +133,44 @@ class ResumeService:
         else:
             return self._render_modern_docx(content, user_details)
 
+    def render_pdf(self, content: ResumeContent, user_details: dict[str, Any] | None = None, template_style: str = "minimalist") -> bytes:
+        template_style = (template_style or "minimalist").lower()
+        if "two" in template_style or "classic" in template_style:
+            tmpl_name = "jinja_twocolumn.html"
+        elif "bold" in template_style or "header" in template_style or "creative" in template_style:
+            tmpl_name = "jinja_boldheader.html"
+        else:
+            tmpl_name = "jinja_minimalist.html"
+
+        tmpl_path = os.path.join(os.path.dirname(__file__), "templates", tmpl_name)
+        if not os.path.exists(tmpl_path):
+            tmpl_path = os.path.join(os.path.dirname(__file__), tmpl_name)
+
+        with open(tmpl_path, "r", encoding="utf-8") as f:
+            template_str = f.read()
+
+        try:
+            from jinja2 import Template
+            jinja_tmpl = Template(template_str)
+            rendered_html = jinja_tmpl.render(
+                user_details=user_details or {},
+                summary=content.summary,
+                skills=content.skills,
+                experience=content.experience,
+                projects=content.projects,
+                education=content.education,
+                certificates=content.certificates,
+            )
+        except Exception:
+            rendered_html = template_str
+
+        try:
+            from weasyprint import HTML
+            return HTML(string=rendered_html).write_pdf()
+        except Exception as e:
+            print(f"WeasyPrint PDF rendering fallback to HTML bytes: {e}")
+            return rendered_html.encode("utf-8")
+
     # Template 1: Modern Clean ATS (Calibri / Arial, Sleek Dark Slate accents)
     def _render_modern_docx(self, content: ResumeContent, user_details: dict[str, Any] | None = None) -> bytes:
         document = Document()
