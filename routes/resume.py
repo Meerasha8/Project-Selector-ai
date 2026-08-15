@@ -301,13 +301,21 @@ def delete_resume_history_item(
 ):
     user_uuid = _uuid_value(current_user.user_uuid)
     query = db.query(ResumeHistory).filter(ResumeHistory.user_uuid == user_uuid)
-    
+    normalized_id = str(history_id).strip()
+
     job = None
-    if history_id.isdigit():
-        job = query.filter(ResumeHistory.id == int(history_id)).first()
+    if normalized_id.isdigit():
+        job = query.filter(ResumeHistory.id == int(normalized_id)).first()
+
     if not job:
         try:
-            job = query.filter(ResumeHistory.job_id == _uuid_value(history_id)).first()
+            job = query.filter(ResumeHistory.job_id == _uuid_value(normalized_id)).first()
+        except Exception:
+            pass
+
+    if not job:
+        try:
+            job = query.filter(ResumeHistory.job_id == normalized_id).first()
         except Exception:
             pass
 
