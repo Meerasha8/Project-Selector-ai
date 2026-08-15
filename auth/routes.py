@@ -29,13 +29,6 @@ def register(user: UserRegister, supabase: Client = Depends(get_supabase)):
     if not result.user:
         raise HTTPException(status_code=400, detail="Registration failed")
 
-    # Optional: populate your profiles table (or use a DB trigger instead, see below)
-    supabase.table("profiles").upsert({
-        "id": result.user.id,
-        "username": user.username,
-        "email": user.email
-    }, on_conflict="id").execute()
-
     return {"user_uuid": result.user.id, "username": user.username, "email": user.email}
 
 
@@ -52,7 +45,7 @@ def login(user: UserLogin, supabase: Client = Depends(get_supabase)):
 
     session = result.session
     profile = supabase.table("profiles").select("*").eq("id", result.user.id).maybe_single().execute()
-    profile_data = profile.data if profile else {}
+    profile_data = profile.data or {} if profile else {}
 
     return {
         "access_token": session.access_token,

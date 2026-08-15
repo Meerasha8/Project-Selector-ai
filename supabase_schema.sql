@@ -23,11 +23,39 @@ create policy "Users can view own profile" on public.profiles
 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" on public.profiles
-    for update using (auth.uid() = id);
+    for update using (auth.uid() = id) with check (auth.uid() = id);
 
-drop policy if exists "Users can insert own profile" on public.profiles;
-create policy "Users can insert own profile" on public.profiles
-    for insert with check (auth.uid() = id);
+-- Trigger-based profile creation for auth.users rows.
+-- This avoids direct inserts from the app backend and keeps RLS enabled.
+drop trigger if exists on_auth_user_created on auth.users;
+drop function if exists public.handle_new_user();
+
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+    insert into public.profiles (id, username, email)
+    values (
+        new.id,
+        new.raw_user_meta_data ->> 'username',
+        new.email
+    )
+    on conflict (id) do update
+        set username = excluded.username,
+            email = excluded.email,
+            updated_at = now();
+
+    return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+after insert on auth.users
+for each row
+execute function public.handle_new_user();
 
 -- User details
 create table if not exists public.user_details (
