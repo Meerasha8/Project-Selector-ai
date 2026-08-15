@@ -235,3 +235,45 @@ def list_chat_history(
 
     return ChatHistoryListResponse(items=items, limit=limit, offset=offset)
 
+
+@router.delete(
+    "/history/{history_id}",
+    summary="Delete a single AI chat history entry",
+)
+def delete_chat_history_item(
+    history_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_uuid = _uuid_value(current_user.user_uuid)
+    normalized_id = str(history_id).strip()
+
+    entry = None
+    if normalized_id.isdigit():
+        entry = db.query(ChatHistory).filter(ChatHistory.user_uuid == user_uuid, ChatHistory.id == int(normalized_id)).first()
+
+    if not entry:
+        raise HTTPException(status_code=404, detail="Chat history item not found")
+
+    db.delete(entry)
+    db.commit()
+    return {"message": f"Chat history item {history_id} deleted successfully"}
+
+
+@router.delete(
+    "/history",
+    summary="Clear all AI chat history for the authenticated user",
+)
+def clear_chat_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user_uuid = _uuid_value(current_user.user_uuid)
+    rows = db.query(ChatHistory).filter(ChatHistory.user_uuid == user_uuid).all()
+
+    for row in rows:
+        db.delete(row)
+
+    db.commit()
+    return {"message": "All chat history cleared successfully"}
+
