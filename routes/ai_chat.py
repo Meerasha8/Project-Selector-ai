@@ -66,7 +66,7 @@ def _get_groq_client() -> Groq:
     return Groq(api_key=api_key)
 
 
-DEFAULT_CHAT_MODEL = "llama-3.1-8b-instant"
+DEFAULT_CHAT_MODEL = "openai/gpt-oss-120b"
 
 
 def _iter_structured_profile_rows(db: Session, user_uuid: str):
