@@ -66,6 +66,9 @@ def _get_groq_client() -> Groq:
     return Groq(api_key=api_key)
 
 
+DEFAULT_CHAT_MODEL = "llama-3.1-8b-instant"
+
+
 def _iter_structured_profile_rows(db: Session, user_uuid: str):
     tables = [
         ("projects", Projects),
@@ -153,9 +156,9 @@ def ask(
 
     try:
         client = _get_groq_client()
-        completion = client.chat.completions.create(
-            model=os.getenv("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile"),
-            messages=[
+        configured_model = os.getenv("GROQ_CHAT_MODEL", DEFAULT_CHAT_MODEL).strip() or DEFAULT_CHAT_MODEL
+        request = {
+            "messages": [
                 {
                     "role": "system",
                     "content": (
@@ -165,12 +168,19 @@ def ask(
                 },
                 {"role": "user", "content": f"Question: {payload.question}\n\nContext:\n{context}"},
             ],
-            temperature=0.2,
-            max_tokens=400,
-        )
+            "temperature": 0.2,
+            "max_tokens": 400,
+        }
+        try:
+            completion = client.chat.completions.create(model=configured_model, **request)
+        except Exception as exc:
+            # Render environments can retain a retired model name; retry once with a current lightweight model.
+            if configured_model == DEFAULT_CHAT_MODEL or "model" not in str(exc).lower():
+                raise
+            completion = client.chat.completions.create(model=DEFAULT_CHAT_MODEL, **request)
         answer = completion.choices[0].message.content
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Groq request failed: {exc}") from exc
+        raise HTTPException(status_code=502, detail="AI provider request failed. Check GROQ_API_KEY and GROQ_CHAT_MODEL.") from exc
 
     sources = [
         SourceReference(source_table=source_table, source_id=source_id)
