@@ -11,6 +11,8 @@ from fastapi import HTTPException
 from groq import Groq
 from pydantic import BaseModel
 
+from embedding_utils import embed_text, cosine_similarity
+
 
 class ResumeContent(BaseModel):
     summary: str
@@ -60,11 +62,60 @@ class ResumeService:
             certificates=certificates
         )
 
+    def _filter_user_data_with_rag(self, job_description: str, user_data: dict[str, Any]) -> dict[str, Any]:
+        job_embedding = embed_text(job_description)
+        filtered_data = {"user_details": user_data.get("user_details", {})}
+
+        def rank_and_filter(items, text_extractor, top_k):
+            if not items:
+                return []
+            scored_items = []
+            for item in items:
+                text = text_extractor(item)
+                emb = embed_text(text)
+                score = cosine_similarity(job_embedding, emb)
+                scored_items.append((score, item))
+            scored_items.sort(key=lambda x: x[0], reverse=True)
+            return [item for score, item in scored_items[:top_k]]
+
+        filtered_data["skills"] = rank_and_filter(
+            user_data.get("skills", []),
+            lambda x: f"{x.get('name', '')} {x.get('description', '')}",
+            top_k=15
+        )
+
+        filtered_data["internship"] = rank_and_filter(
+            user_data.get("internship", []),
+            lambda x: f"{x.get('role', '')} {x.get('description', '')}",
+            top_k=5
+        )
+
+        filtered_data["projects"] = rank_and_filter(
+            user_data.get("projects", []),
+            lambda x: f"{x.get('name', '')} {x.get('description', '')} {x.get('tech_stack', '')}",
+            top_k=4
+        )
+
+        filtered_data["education"] = rank_and_filter(
+            user_data.get("education", []),
+            lambda x: f"{x.get('course_name', '')} {x.get('college_name', '')}",
+            top_k=3
+        )
+
+        filtered_data["certificates"] = rank_and_filter(
+            user_data.get("certificates", []),
+            lambda x: f"{x.get('certificate_name', '')}",
+            top_k=5
+        )
+
+        return filtered_data
+
     def select_resume_content(self, job_description: str, user_data: dict[str, Any]) -> ResumeContent:
         if self.client is None:
             return self._create_fallback_content(user_data)
 
-        raw_payload = json.dumps(user_data, ensure_ascii=False, indent=2)
+        filtered_user_data = self._filter_user_data_with_rag(job_description, user_data)
+        raw_payload = json.dumps(filtered_user_data, ensure_ascii=False, indent=2)
         schema = {
             "summary": "string",
             "skills": ["string"],

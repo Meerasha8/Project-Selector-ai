@@ -1,27 +1,13 @@
-py -m venv venv -> to setup virtual environment
+# Portfolio & Resume Management Platform Backend
+RestAPI which is build using **FastAPI & PostGresSQL**. It handles Authentication, Session Management, CRUD operations, Chat Conversation/ History Management and Resume Generation / Management.
 
-.\venv\Scripts\Activate -> to activate the virtual environment
-
-pip install -r requirements.txt -> to install all required packages
-
-add groq api key in the environment variable GROQ_API_KEY=YOUR_KEY
-
-uvicorn mains:dapp --reload -> to run the app
-
-##routes 
-
-/ -> health check route (GET)
-
-/ai-analysis -> to analyze and get 3 best suitable projects for job description (POST)
-
-/add-project -> to add projects with title and description (POST)
-
-/get-all-projects -> to get all the projects from database (GET)
-
-/get-project/{project_id} -> to get information of a particular project (GET)
-
-/edit-project/{project_id} -> to edit information of a particular project (PUT)
-
-/delete-project/{project_id} -> to delete a particular project (DELETE)
-
-/docs -> fast api swagger to test routes (Inbuilt)
+# DataBase Models
+**Skills:** Name, Description.  
+**Achievements:** Description.  
+**Internships:** CompanyName, Role, Description, Duration.  
+**Projects:** Name, Description, TechStack, GitHubURL, LiveLink.  
+**Educations:** CourseName, CGPA, StartYear, EndYear,InstitutionName,Location.  
+**Certificates:** CertificateName, CertificateIssuer.  
+**UserDetails:** Name,MobileNumber,EmailID,GithubURL,LinkedinURL, PortfolioURL, Location, ProfessionalSummary.  
+**ChatHistory:** Question, Answer, Sources
+**ResumeHistory:** JobDescription, DownloadURL, TemplateStyle
