@@ -146,7 +146,7 @@ class ResumeService:
         for attempt in range(3):
             try:
                 response = self.client.chat.completions.create(
-                    model=os.getenv("GROQ_CHAT_MODEL", "llama-3.3-70b-versatile"),
+                    model=os.getenv("GROQ_CHAT_MODEL", "openai/gpt-oss-120b"),
                     messages=[
                         {"role": "system", "content": "Return only raw valid JSON matching the requested schema. Do not use markdown codeblocks."},
                         {
